@@ -1,0 +1,860 @@
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">            
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-39069349-11"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-39069349-11');
+    </script>
+    
+    
+    <link rel="stylesheet" href="css/bulma.min.css">    
+
+    <link rel="stylesheet" href="js/leaflet/leaflet.css"/>
+    <script src="js/leaflet/leaflet.js"></script>
+   
+   
+    <!-- jQuery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js" type="text/javascript"></script>
+  
+    <!-- nanogallery2 -->
+    <link  href="https://unpkg.com/nanogallery2@2.3.0/dist/css/nanogallery2.min.css" rel="stylesheet" type="text/css">
+    <script  type="text/javascript" src="https://unpkg.com/nanogallery2@2.3.0/dist/jquery.nanogallery2.min.js"></script>
+
+    <script defer src="https://use.fontawesome.com/releases/v5.1.0/js/all.js"></script>
+
+
+  </head>
+  <body>
+        
+    <h1 class="title">Ivry Confluences - carte interactive des projets
+    <span class="tag is-warning">work-in-progress : données incomplètes</span></h1>
+
+    <!-- POPUP PROJECT DETAILS -->
+    <div class="modal" id="myPopup" style="z-index:3000;">
+      <div class="modal-background"></div>
+      <div class="modal-content">
+        <!-- Any other Bulma elements you want -->
+        
+        <header class="modal-card-head has-background-primary">
+          <p id="popupTitle" class="modal-card-title has-text-white">Titre</p>
+          <button id="btnPopupClose" class="delete" aria-label="close"></button>
+        </header>
+        <section class="modal-card-body">
+          <!-- Content ... -->
+          
+          <div class="containerX boxX has-background-white-ter" style="padding:5px;">
+            <nav class="level">
+              <div class="level-item has-text-centered title is-5">
+                Surface de Plancher
+              </div>
+              </nav>
+            <nav class="level">
+              <div class="level-item has-text-centered">
+                <div>
+                  <p class="heading">Logement</p>
+                  <p id="popupSurfL" class="title is-6 is-primary"></p>
+                </div>
+              </div>
+              <div class="level-item has-text-centered">
+                <div>
+                  <p class="heading">Equipement public</p>
+                  <p id="popupSurfE" class="title is-6"></p>
+                </div>
+              </div>
+              <div class="level-item has-text-centered">
+                <div>
+                  <p class="heading">Activité économique</p>
+                  <p id="popupSurfA" class="title is-6"></p>
+                </div>
+              </div>
+            </nav>
+          </div>
+          <br>
+          <label><b>Date de livraison: </b></label><label id="popupDeliveryDate"></label><br>
+          <label><b>Catégorie: </b></label><label id="popupCategory"></label><br>
+
+
+<!--
+          <label><b>Surface logement: </b></label><label id="popupSurfL"></label><br>
+          <label><b>Surface activité économique: </b></label><label id="popupSurfA"></label><br>
+          <label><b>Surface équipement public: </b></label><label id="popupSurfE"></label><br>
+          -->
+          <label><b>Infos: </b></label><br>
+          <div id="popupDesc"></div><br>
+          <br><br>
+          <div id="popupDocs"></div>
+          <div id="popupGallery"></div>
+        </section> 
+    
+        
+      </div>
+      <!--
+      <button id="btnPopupClose"class="modal-close is-large" aria-label="close"></button>
+      -->
+    </div>
+
+
+    <!-- POPUP DISPLAY DATA -->
+    <div class="modal" id="myPopupData" style="z-index:3000;">
+      <div class="modal-background"></div>
+      <div class="modal-content">
+        <!-- Any other Bulma elements you want -->
+        
+        <header class="modal-card-head has-background-primary">
+          <p id="popupTitle" class="modal-card-title has-text-white">Données</p>
+          <button id="btnPopupDataClose" class="delete" aria-label="close"></button>
+        </header>
+        <section class="modal-card-body">
+          <!-- Content ... -->
+          <div id="myPopupDataDisplay">non dispo</div>
+        </section> 
+      </div>
+    </div>
+
+    
+    <br><br>
+    
+    <div style="margin:10px;">
+    
+      <!-- INFORMATIONS -->
+      <div class="container box has-background-white-ter">
+        <nav class="level">
+          <div class="level-item has-text-centered title is-4">
+            Surface de Plancher des Constructions
+          </div>
+          </nav>
+        <nav class="level">
+          <div class="level-item has-text-centered">
+            <div>
+              <p class="heading">Logements</p>
+              <p id="spcLogements" class="title is-5 is-primary"></p>
+            </div>
+          </div>
+          <div class="level-item has-text-centered">
+            <div>
+              <p class="heading">Equipements publics</p>
+              <p id="spcEquipements" class="title is-5"></p>
+            </div>
+          </div>
+          <div class="level-item has-text-centered">
+            <div>
+              <p class="heading">Activités économiques</p>
+              <p id="spcActivités" class="title is-5"></p>
+            </div>
+          </div>
+          <div class="level-item has-text-centered">
+            <div>
+              <p class="heading">Total</p>
+              <p id="spcTotal" class="title is-5"></p>
+            </div>
+          </div>
+        </nav>
+      </div>
+    
+    
+      <div style="margin-left:20px;margin-right:20px;">
+      <!-- DROPDOWN FILTER -->
+        <div class="">
+          <div id="dropdownPanelFilter" class="dropdown is-activeX" style="z-index:2000;">
+            <div class="dropdown-trigger">
+              <button id="btnPanelFilter" class="button is-primary" aria-haspopup="true" aria-controls="dropdown-menu3">
+                <span>Filtre d'affichage</span>
+                <span class="icon is-small">
+                  <i class="fas fa-angle-down" aria-hidden="true"></i>
+                </span>
+              </button>
+            </div>
+            <div class="dropdown-menu" id="dropdown-menu3" role="menu">
+              <div class="dropdown-content has-background-white-ter">
+
+                <nav class="panel">
+
+                  <div class="panel-block">
+                    <div class="columns">
+                      <div class="column">
+                        <label class="label" id="btnFilterKind" style="white-space: nowrap">Type d'opération</label>
+                        <div id="panelFilterKind"></div>
+                      </div>
+                      
+                      <div class="column">
+                        <label class="label" id="btnFilterState" >Statut</label>
+                        <div id="panelFilterState"></div>
+                      </div>
+
+                      <div class="column">
+                        <label class="label" style="white-space: nowrap">Date de livraison</label>
+                        
+                        <div class="field is-horizontal">
+                          <div class="field-label is-normal">
+                            <label class="label">Entre</label>
+                          </div>
+                          <div class="field-body">
+                            <div class="field">
+                              <div class="select">
+                                <select id="lstFromMonth">
+                                  <option>01</option>
+                                  <option>02</option>
+                                  <option>03</option>
+                                  <option>04</option>
+                                  <option>05</option>
+                                  <option>06</option>
+                                  <option>07</option>
+                                  <option>08</option>
+                                  <option>09</option>
+                                  <option>10</option>
+                                  <option>11</option>
+                                  <option>12</option>
+                                </select>
+                              </div>
+                            </div>
+                            <div class="field">
+                              <div class="select">
+                                <select id="lstFromYear">
+                                </select>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div class="field is-horizontal">
+                          <div class="field-label is-normal">
+                            <label class="label">et</label>
+                          </div>
+                          <div class="field-body">
+                            <div class="field">
+                              <div class="select">
+                                <select id="lstToMonth">
+                                  <option>01</option>
+                                  <option>02</option>
+                                  <option>03</option>
+                                  <option>04</option>
+                                  <option>05</option>
+                                  <option>06</option>
+                                  <option>07</option>
+                                  <option>08</option>
+                                  <option>09</option>
+                                  <option>10</option>
+                                  <option>11</option>
+                                  <option selected>12</option>
+                                </select>
+                              </div>
+                            </div>
+                            <div class="field">
+                              <div class="select">
+                                <select id="lstToYear">
+                                </select>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                  
+                  <div class="panel-block">
+                    <button id="btnFilter" class="button is-outlined is-fullwidth is-danger">
+                      <b>Appliquer le filtre</b>
+                    </button>
+                  </div>
+                </nav>
+
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+       
+            
+        <!-- CARTE -->
+        <div id="mapid" style="height:600px;"></div>
+        <div id="mapLegend" style="display: inline-block;">ghgh</div>
+      </div>
+      
+      <br><br>
+      <H3>Objectifs de Surfaces de Plancher: </h3>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Année</th>
+            <th>SPC Logements</th>
+            <th>SPC équipements publiques</th>
+            <th>SPC activités économiques</th>
+            <th>SPC total</th>
+          </tr>
+        </thead>
+        <tbody id="tblGoals">
+        </tbody>
+      </table>
+      
+      <br><br>
+      <button id="btnDisplayData" class="button is-outlined is-primary">
+        Afficher les données
+      </button>
+      <!--
+      <button id="btnContribute" class="button is-outlined is-primary">
+        Contribuer
+      </button>
+      -->
+      <br><br><br>
+      <div class="has-text-centered is-size-7">
+        <b>outil développé par christophe brisbois - version beta - aucune garantie n'est offerte quant à l'exactitude des données</b>
+      </div>
+    </div>
+
+
+<script>
+
+  // EXPORT OSM polygons (WKT, GeoJSON, poly, Image) -> http://polygons.openstreetmap.fr/
+  // DRAW POLYGONS -> http://geojson.io
+  // http://umap.openstreetmap.fr/nl/map/carte-des-projets-damenagement-ivry-sur-seine_138266#15/48.8059/2.3952
+  // slideshare franges du parc : https://fr.slideshare.net/mairieivry/ivry-confluences-concertation-microquartier-les-franges-du-parc-de-la-confluence
+  // slideshare déplacements ZIC https://fr.slideshare.net/mairieivry/dplacements-dans-ivry-confluences?next_slideshow=1
+  // plan ZAC avec trous : http://www.mrae.developpement-durable.gouv.fr/IMG/pdf/180216_mrae_avis_sur_le_programme_immobilier_au_droit_des_anciennes_imprimeries_du_monde_a_ivry_94_.pdf
+
+  // SPC : Surface de Plancher des Constructions
+  // category : activité économique, équipement public, logement
+  
+  var myArea = [
+    { name: 'Micro quartier gare', id: 'micro_quartier_gare', kind: 'micro_quartier', delivery_date: '', state: 'projet', keywords: '', desc: '' },
+    { name: 'Micro quartier Square Prudhon', id: 'micro_quartier_prudhon', kind: 'micro_quartier', delivery_date: '', state: 'projet', keywords: '', desc: '' },
+    { name: 'Micro Quartier Rigaud', id: 'micro_quartier_rigaud', kind: 'micro_quartier', delivery_date: '', state: 'projet', keywords: '', desc: '' },
+    { name: 'Micro Quartier Couronne Gambetta', id: 'micro_quartier_gambetta', kind: 'micro_quartier', delivery_date: '', state: 'projet', keywords: '', desc: '' },
+    { name: 'Micro Quartier Franges du Parc', id: 'micro_quartier_franges_parc', kind: 'micro_quartier', delivery_date: '', state: 'projet', keywords: '', desc: '' },
+    { name: 'Villa Molière', id: 'villa_moliere', category: 'l', kind: 'logement', spc_l: 9100, delivery_date: '01/12/2015', state: 'livré', keywords: 'privé, social', gallery: true, desc: '122 logements (85 en accession, 37 bailleur social IDF Habitat)<br>Livrée en décembre 2015<br>Promoteur : Bouygues Immobilier<br>Architecte / MOE : Frédéric LEBARD https://www.studio-afl.com/' },
+    { name: 'Silver Innov', id: 'silver_innov', category: 'a', kind: 'tertiaire', spc_a: 4040, delivery_date: '01/07/2014', state: 'livré', gallery: true, keywords: '', desc: 'Plateforme Charles-Foix Silver\’Innov http://silver-innov.fr/' },
+    { name: 'Station Géothermie', id: 'station_geothermie', category: 'a', kind: 'tertiaire', spc_a: 0, delivery_date: '01/06/2017', state: 'livré', gallery: false, keywords: '', desc: 'Plateforme Charles-Foix Silver\’Innov http://silver-innov.fr/' },
+    { name: 'Quai aux Grains', id: 'quai_aux_grains', category: 'l', kind: 'logement', spc_l: 13400, spc_a: 1190, delivery_date: '01/12/2015', state: 'livré', gallery: true, keywords: 'privé, social', desc: 'Projet urbain, 78 logements sociaux, 96 logements libres, 170 stationnements et espaces extérieurs.<br>Maître d’ouvrage : BRÉMOND, Équipe : ARCHIKUBIK ' },
+    { name: 'Résidence Logis-Transport', id: 'residence_logis_transport', category: 'l', spc_l: 6020, kind: 'logement', delivery_date: '01/06/2017', state: 'livré', gallery: true, keywords: 'social', desc: 'Logements : 70 en locatif social<br>stationnement : 36 places en sous-sol<br>Maitre d\'ouvrage : Logis-transports<br>Architectes : Pierre et Marjolijn Boudry<br>Adresse: 13 rue pierre rigaud et 3 rue des lampes, 94200 ivry-sur-seine' },
+    { name: 'Résidence intergénérationnelle', id: 'residence_intergenerationnelle', category: 'l', spc_l: 5200, spc_e: 700, kind: 'logement', delivery_date: '01/06/2017', state: 'livré', gallery: true, keywords: 'social', desc: '129 logements, 1 crèche, 31 places de parking' },
+    { name: 'Lumen', id: 'lumen', category: 'l', kind: 'logement', scp_l: 8750, delivery_date: '01/01/2015', gallery: true, state: 'livré', keywords: '', desc: '' },
+    { name: 'Duo en Seine', id: 'duo_en_seine', category: 'l', kind: 'logement', spc_l: 11000, spc_a: 2230, delivery_date: '01/01/2015', gallery: true, state: 'livré', keywords: '', desc: '' },
+    { name: 'Tours de l\'atelier Montrouge', id: 'tours_montrouge', category: 'l', kind: 'logement', spc_l: 1650, gallery: true, delivery_date: '01/01/2015', state: 'livré', keywords: '', desc: 'Réhabilitation' },
+    { name: 'Madiba', id: 'madiba', category: 'l', kind: 'logement', spc_l: 8156, gallery: true, delivery_date: '01/01/2015', state: 'livré', keywords: '', desc: '64 logements en accession (4970m2), 40 logements locatifs sociaux (3186m2).<br>Maître d’ouvrage : Groupe Brémond – SCCV Madiba<br>Maître d’œuvre : Gaétan Engasser – agence Engasser & associés' },
+    { name: 'Le 96', id: 'le96_pvc', category: 'l', kind: 'logement', spc_l: 0, gallery: false, delivery_date: '01/01/2016', state: 'livré', keywords: '', desc: '39 logements en accession à la propriété<br>19 logements sociaux' },
+    { name: 'Cité Emile Blin', id: 'cite_emile_blin', category: 'l', kind: 'logement', spc_l: 4490, gallery: false, delivery_date: '01/01/2016', state: 'livré', keywords: '', desc: '61 logements locatifs sociaux<br>Architectes : Atelier du Pont<br>Bailleur: OPH Ivry' },
+    { name: 'Résidence Madeleine Delbrel', id: 'residence_madeleine_delbrel', category: 'l', kind: 'logement', spc_l: 2860, gallery: false, delivery_date: '01/12/2018', state: 'en cours de réalisation', keywords: '', desc: 'Maître d\’ouvrage : Coallia<br>Surface SHON : 2860 m2<br>Montant des travaux : 4 870 000 € HT<br>Partenaire : BETEREM Ingénierie (BET TCE + ECO)' },
+    { name: 'Groupe scolaire Rosalind Franklin', category: 'e', id: 'rosalind_franklin', kind: 'établissement_scolaire', spc_e: 4925, delivery_date: '01/09/2015', gallery: true, state: 'livré', keywords: '', desc: '' },
+    { name: 'Collège des Confluences', category: 'e', id: 'college_confluences', kind: 'établissement_scolaire', spc_e: 7000, delivery_date: '01/09/2019', state: 'en cours de réalisation', keywords: '', desc: 'Construction d\'un collège pour 600 élèves, avec gymnase accessible au public et six appartements de fonction.<br>MOA: CONSEIL GÉNÉRAL DU VAL-DE-MARNE<br>MOE: AMELLER, DUBOIS ET ASSOCIÉS<br>Coût prévisionnel : 13,7 M€ HT' },
+    { name: 'Parvis Collège des Confluences', id: 'college_confluences_parvis', category: 'e', kind: 'square', spc_e: 1100, delivery_date: '01/09/2019', state: 'en cours de réalisation', keywords: '', desc: '' },
+    { name: 'Square de la Minoterie', id: 'square_minoterie', category: 'e', kind: 'square', spc_e: 2200, delivery_date: '01/01/2015', state: 'livré', keywords: '', desc: '' }
+    ];
+  
+  
+  
+  var myConfig = {
+    scp : { total : 1300000, l: 0.4, a: 0.5, e: 0.1 },
+    baseURL: 'projects/',
+    //baseURL: 'https://ivry.brisbois.fr/zac_ic/projects/',
+    //baseURL: 'data/',
+    // nano_photos_provider: 'https://nano.gallery/nano_photos_provider2/nano_photos_provider2.php',
+    nano_photos_provider: 'https://ivry.brisbois.fr/zac_ic/nano_photos_provider2/nano_photos_provider2.php',
+    docs_provider: 'http://ivry.brisbois.fr/zac_ic/docs/',
+    project_category : { a:'activité économique', e: 'équipement public', l: 'logement'},
+    kind_unselected : [], //['micro_quartier'],
+    style: {
+      kind: {
+        logement: { 'stroke': '#444', 'stroke_width': 2, 'stroke_opacity': 1, 'fill': '#ffff00', 'fill_opacity': 0.5},
+        tertiaire: { 'stroke': '#444', 'stroke_width': 2, 'stroke_opacity': 1, 'fill': '#0000ff', 'fill_opacity': 0.5},
+        micro_quartier: { 'stroke': '#444', 'stroke_width': 2, 'stroke_opacity': 1, 'fill': '#00ffff', 'fill_opacity': 0.5},
+        établissement_scolaire: { 'stroke': '#444', 'stroke_width': 2, 'stroke_opacity': 1, 'fill': '#ff00ff', 'fill_opacity': 0.5},
+        square: { 'stroke': '#444', 'stroke_width': 2, 'stroke_opacity': 1, 'fill': '#00ff00', 'fill_opacity': 0.5}
+      }
+    },
+    table_data : { name: 'Nom du projet', id: 'Identifiant', kind: 'Type opération', delivery_date: 'Date de livraison', state: 'Etat d\'avancement', keywords: 'Mots clés', desc: 'Description du projet' },
+
+  };
+  
+  
+  
+  // Init map
+	var mymap = L.map('mapid').setView([51.505, -0.09], 13);
+
+    // create the tile layer with correct attribution
+    var osmUrl='http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+    var osmAttrib='Map data © <a href="http://openstreetmap.org">OpenStreetMap</a> contributors | Layers © C. Brisbois';
+    var osm = new L.TileLayer(osmUrl, {attribution: osmAttrib});
+
+    // start the map in South-East England
+    //mymap.setView(new L.LatLng(51.3, 0.7),9);
+    mymap.setView(new L.LatLng(48.81455, 2.40207),16);
+    mymap.addLayer(osm);
+  
+
+  // Display/hide filter panel
+  var el = document.getElementById("btnPanelFilter");
+  el.addEventListener("click", function(){
+    var box = document.getElementById('dropdownPanelFilter');
+    box.classList.toggle('is-active');
+  }, false);
+
+  
+  // Close POPUP PROJECT DETAILS
+  var el = document.getElementById("btnPopupClose");
+  el.addEventListener("click", function(){
+    var box = document.getElementById('myPopup');
+    box.classList.toggle('is-active');
+    jQuery("#popupGallery").nanogallery2('destroy');
+  }, false);
+
+  // Close POPUP DATA
+  var el = document.getElementById("btnPopupDataClose");
+  el.addEventListener("click", function(){
+    var box = document.getElementById('myPopupData');
+    box.classList.toggle('is-active');
+  }, false);
+  // Display POPUP DATA
+  var el = document.getElementById("btnDisplayData");
+  el.addEventListener("click", function(){
+    var box = document.getElementById('myPopupData');
+    box.classList.toggle('is-active');
+
+        // EXTRACT VALUE FOR HTML HEADER. 
+        // ('Book ID', 'Book Name', 'Category' and 'Price')
+        var col = [];
+        for (var i = 0; i < myArea.length; i++) {
+            for (var key in myArea[i]) {
+                if (col.indexOf(key) === -1) {
+                    col.push(key);
+                }
+            }
+        }
+
+        // CREATE DYNAMIC TABLE.
+        var table = document.createElement("table");
+        table.className='table';
+
+        // CREATE HTML TABLE HEADER ROW USING THE EXTRACTED HEADERS ABOVE.
+
+        var tr = table.insertRow(-1);                   // TABLE ROW.
+
+        for (var i = 0; i < col.length; i++) {
+            var th = document.createElement("th");      // TABLE HEADER.
+            th.innerHTML = col[i];
+            tr.appendChild(th);
+        }
+
+        // ADD JSON DATA TO THE TABLE AS ROWS.
+        for (var i = 0; i < myArea.length; i++) {
+
+            tr = table.insertRow(-1);
+
+            for (var j = 0; j < col.length; j++) {
+                var tabCell = tr.insertCell(-1);
+                tabCell.innerHTML = myArea[i][col[j]];
+            }
+        }
+
+        // FINALLY ADD THE NEWLY CREATED TABLE WITH JSON DATA TO A CONTAINER.
+        var divContainer = document.getElementById("myPopupDataDisplay");
+        divContainer.innerHTML = "";
+        divContainer.appendChild(table);    
+    
+  }, false);
+
+
+  
+  
+
+  
+  
+  
+  // Click on filter column header - KIND
+  var el = document.getElementById("btnFilterKind");
+  el.addEventListener("click", function(){
+    var cb_kind = document.getElementsByName('cbItemKind');
+    var c = !cb_kind[0].checked;
+    for(var i=0; i< cb_kind.length; i++){
+      cb_kind[i].checked = c;
+    }
+  }, false);
+  
+  // Click on filter column header - STATE
+  var el = document.getElementById("btnFilterState");
+  el.addEventListener("click", function(){
+    var cb_state = document.getElementsByName('cbItemState');
+    var c = !cb_state[0].checked;
+    for(var i=0; i< cb_state.length; i++){
+      cb_state[i].checked = c;
+    }
+  }, false);
+  
+  
+  // Build the filter panel based on the content of the area custom datas
+  var buildFilterPanel = function () {
+    
+    var lst_kind = [];
+    var lst_state = [];
+    var lst_year = [];
+
+    myArea.forEach( function(item) {
+      if( lst_kind.includes(item.kind) === false ) {
+        lst_kind.push(item.kind);
+      }
+      if( lst_state.includes(item.state) === false ) {
+        lst_state.push(item.state);
+      }
+      
+      if( item.delivery_date != '' ) { 
+        var date_parts = item.delivery_date.split("/");
+        item.delivery_date_internal = new Date( date_parts[2], date_parts[1]-1, date_parts[0] );
+        if( lst_year.includes( date_parts[2] ) === false ) {
+          lst_year.push( date_parts[2] );
+        }
+      }
+      else {
+        item.delivery_date_internal = null;
+      }
+      
+    });
+    lst_kind.sort();
+    lst_state.sort();
+    lst_year.sort();
+    
+    // kind
+    var legende = '';
+    legende += '<div style="display: inline-block;"><div style="display:inline-block; background-color:#ddd;opacity:1;width:20px;height:15px;border:2px solid #f00;"> </div> ZAC &nbsp; </div>';
+    lst_kind.forEach( function(item) {
+      var div = document.createElement('div');
+      var c='checked';
+      myConfig.kind_unselected.forEach( function(one) {
+        if( one == item ) {
+          c = '';
+        }
+      });
+      div.innerHTML = '<div class="field-body"><div class="field" style="white-space: nowrap"><label  class="checkbox"><input type="checkbox" name="cbItemKind" '+c+' value="' + item + '" /><div style="display: inline-block;background-color:'+myConfig.style.kind[item].fill+';opacity:'+myConfig.style.kind[item].fill_opacity+';width:20px;height:15px;border:2px solid '+myConfig.style.kind[item].stroke+';"> </div> '+ item.replace(/_/gi, ' ') +'</label></div></div>';
+      legende += '<div style="display: inline-block;"><div style="display: inline-block;background-color:'+myConfig.style.kind[item].fill+';opacity:'+myConfig.style.kind[item].fill_opacity+';width:20px;height:15px;border:2px solid '+myConfig.style.kind[item].stroke+';"> </div> '+ item.replace(/_/gi, ' ') +' &nbsp; </div>';
+      document.getElementById('panelFilterKind').appendChild(div);    
+    });
+    console.log(legende);
+    document.getElementById('mapLegend').innerHTML = legende;
+    
+    // state
+    lst_state.forEach( function(item) {
+      var div = document.createElement('div');
+      div.innerHTML = '<div class="field-body"><div class="field" style="white-space: nowrap"><label class="checkbox"> <input type="checkbox" name="cbItemState" checked value="' + item + '" /> '+ item.replace(/_/gi, ' ') +' </label></div></div>';
+      document.getElementById('panelFilterState').appendChild(div);    
+    });
+    
+    // year
+    lst_year.forEach( function(item) {
+      var opt = document.createElement('option');
+      opt.innerHTML = item;
+      document.getElementById('lstFromYear').appendChild(opt);
+      opt = document.createElement('option');
+      opt.innerHTML = item;
+      document.getElementById('lstToYear').appendChild(opt);
+    });
+    var se = document.getElementById('lstToYear');
+    se.selectedIndex = se.options.length-1;
+    
+  }
+  
+  // download one layer
+  var downloadLayer = function( item ) {
+    var request = new XMLHttpRequest();
+    request.open('GET', myConfig.baseURL + item.id + '.geojson', true);
+    request.setRequestHeader('Content-Type', 'application/json');
+    request.onload = function(data) {
+      if( request.status == 404 ) { return; };
+      var newLayer = L.geoJson(JSON.parse(data.target.response), {
+        style: function(feature) {
+          return {
+            fillColor: myConfig.style.kind[item.kind].fill,
+            fillOpacity: myConfig.style.kind[item.kind].fill_opacity,
+            color: myConfig.style.kind[item.kind].stroke,
+            weight: myConfig.style.kind[item.kind].stroke_width,
+            opacity: myConfig.style.kind[item.kind].stroke_opacity
+            };
+          }
+      }).addTo(mymap);      
+      //newLayer.bindPopup( "<b>" + item.name.replace(/_/gi, ' ') + "</b><br><b>Date livraison:</b> "+ item.delivery_date +"<br><br>" + item.desc,  );
+      newLayer.on('click', onLayerClick);
+      newLayer.options.custom_item = item;
+    };
+    request.send();
+  };
+  
+  // find URL and insert links
+  function urlify( text) {
+    var urlRegex = /(https?:\/\/[^\s]+)/g;
+    return text.replace(urlRegex, function(url) {
+        return '<a href="' + url + '" target="_blank">' + url + '</a>';
+    })
+    // or alternatively
+    // return text.replace(urlRegex, '<a href="$1">$1</a>')
+  }
+
+  var getValueOrEmpty = function( prop, add ) {
+    if( prop == undefined ) {
+      return '-';
+    }
+    return prop + add;
+  }
+  
+  var onLayerClick = function(event){
+    //var label = event.target.options.label;
+    var item = event.target.options.custom_item;
+    var box = document.getElementById('myPopup');
+    box.classList.toggle('is-active');
+    
+    // Add data to popup
+    document.getElementById('popupTitle').innerHTML = item.name.replace(/_/gi, ' ');
+    document.getElementById('popupDeliveryDate').innerHTML = item.delivery_date;
+    var t = item.category == undefined ? '' :  myConfig.project_category[item.category];
+    document.getElementById('popupCategory').innerHTML = t;
+    document.getElementById('popupSurfL').innerHTML = numberWithCommas( getValueOrEmpty(item.spc_l, 'm2') );
+    document.getElementById('popupSurfA').innerHTML = numberWithCommas( getValueOrEmpty(item.spc_a, 'm2') );
+    document.getElementById('popupSurfE').innerHTML = numberWithCommas( getValueOrEmpty(item.spc_e, 'm2') );
+    
+    document.getElementById('popupDesc').innerHTML = urlify(item.desc);
+
+    
+    // list of documents
+    document.getElementById('popupDocs').innerHTML = '';
+    var request = new XMLHttpRequest();
+    request.open('GET', myConfig.docs_provider + 'get_folder_json.php?project=' + item.id, true);
+    request.setRequestHeader('Content-Type', 'application/json');
+    request.onload = function(data) {
+      if( data.target.response.length > 0 ) {
+        var docs = JSON.parse(data.target.response);
+        var d = '';
+        docs.files.forEach(function (doc) {
+          d += '<li><a href="'+ myConfig.docs_provider + item.id + '/' + doc.file+'" target="_blank">'+doc.file+'</a></li>';
+        });
+        document.getElementById('popupDocs').innerHTML = '<div class="content"><b>Documents:</b><ul style="margin-top: 0em;">' + d + '</ul><br></div>';
+      }
+
+    };
+    request.send();
+    
+    // image gallery
+    if( item.gallery !== undefined && item.gallery === true ) {
+      // build gallery
+      jQuery("#popupGallery").nanogallery2({
+        kind: 'nano_photos_provider2',
+        dataProvider: myConfig.nano_photos_provider,
+        album: item.id,
+        galleryDisplayTransition: '',
+       
+        thumbnailAlignment: 'fillWidth',
+
+        thumbnailHeight: '150', thumbnailWidth: '150',
+        
+        //thumbnailDisplayTransition: null,
+        thumbnailDisplayTransitionDuration: 600,
+        thumbnailDisplayInterval: 0,
+        galleryMaxRows: 1,
+        galleryDisplayMode: 'pagination',
+
+        thumbnailGutterWidth: 1,
+        thumbnailGutterHeight: 1,
+        thumbnailBorderHorizontal: 2,
+        thumbnailBorderVertical: 2,
+
+        thumbnailHoverEffect2: null,
+        thumbnailToolbarImage : null,
+        thumbnailToolbarAlbum: null,
+
+        thumbnailLabel: { display: false},
+        
+        viewerToolbar: { display: false },
+        locationHash: false
+      });
+    }
+ 
+  };
+
+  
+  
+  // Filter layers
+  var el = document.getElementById("btnFilter");
+  el.addEventListener("click", function(){
+    
+//    btnPanelFilter
+    var box = document.getElementById('dropdownPanelFilter');
+    box.classList.remove('is-active');
+    
+    // clear map - remove all layers
+    mymap.eachLayer(function (layer) {
+      if( layer._url === undefined ) {
+        mymap.removeLayer(layer);
+      }
+    });
+
+    // download ZAC_IC
+    var request = new XMLHttpRequest();
+    request.open('GET', myConfig.baseURL + 'zac_ic.geojson', true);
+    request.setRequestHeader('Content-Type', 'application/json');
+    request.onload = function(data) {
+      if( request.status == 404 ) { return; };
+      var newLayer = L.geoJson(JSON.parse(data.target.response), {
+        style: function(feature) {
+          return {
+            fillColor: '#f00',
+            fillOpacity: 0,
+            color: '#f00',
+            weight: 4,
+            opacity: 1
+            };
+          }
+      }).addTo(mymap);      
+      // download des trous
+      request = new XMLHttpRequest();
+      request.open('GET', myConfig.baseURL + 'zac_ic_trous.geojson', true);
+      request.setRequestHeader('Content-Type', 'application/json');
+      request.onload = function(data) {
+        if( request.status == 404 ) { return; };
+        var newLayer = L.geoJson(JSON.parse(data.target.response), {
+          style: function(feature) {
+            return {
+              fillColor: '#000',
+              fillOpacity: 0.05,
+              color: '#00f',
+              weight: 2,
+              opacity: 0.5,
+              dashArray : "3,5"
+              };
+            }
+        }).addTo(mymap);
+        downloadSelectedLayers();        
+      };
+      request.send();
+    };
+    request.send();
+
+    
+    
+  }, false);
+ 
+
+  var downloadSelectedLayers = function( ) {
+    // kind
+    var cb_kind = document.getElementsByName('cbItemKind');
+		var lst_kind = [];
+		for(var i=0; i< cb_kind.length; i++){
+			if( cb_kind[i].type=='checkbox' && cb_kind[i].checked==true ) {
+				lst_kind.push(cb_kind[i].value);
+      }
+		}
+    
+    // state
+    var cb_state = document.getElementsByName('cbItemState');
+		var lst_state = [];
+		for(var i=0; i<cb_state.length; i++){
+			if( cb_state[i].type=='checkbox' && cb_state[i].checked==true ) {
+				lst_state.push(cb_state[i].value);
+      }
+		}
+    
+    
+    // from date
+    var se = document.getElementById('lstFromMonth');
+    var from_month = se.options[se.selectedIndex].text;
+    se = document.getElementById('lstFromYear');
+    var from_year = se.options[se.selectedIndex].text;
+    var from_date = new Date( from_year, from_month-1);
+
+    // to date
+    se = document.getElementById('lstToMonth');
+    var to_month = se.options[se.selectedIndex].text;
+    se = document.getElementById('lstToYear');
+    var to_year = se.options[se.selectedIndex].text;
+    var to_date = new Date( to_year, to_month-1);
+    
+    
+    var spc = { a: 0, l: 0, e: 0 };
+    myArea.forEach( function(item) {
+      var cmp_date = item.delivery_date_internal;
+      if( cmp_date == null ) {
+        cmp_date = from_date;   
+      }
+      if( lst_kind.indexOf(item.kind) > -1 && lst_state.indexOf(item.state) > -1 && cmp_date >= from_date && cmp_date <= to_date  ) {
+        downloadLayer(item);
+        
+        // surface logement
+        if( item.spc_l != undefined ) {
+          spc.l += item.spc_l;
+        }
+        // surface activité économique
+        if( item.spc_a != undefined ) {
+          spc.a += item.spc_a;
+        }
+        // surface équipement public
+        if( item.spc_e != undefined ) {
+          spc.e += item.spc_e;
+        }
+      }
+    });
+    
+    var t = myConfig.scp.total * myConfig.scp.l;
+    var r = spc.l;
+    document.getElementById('spcLogements').innerHTML = '' + numberWithCommas(spc.l) + ' m2</span>';
+    // document.getElementById('spcLogements').innerHTML = '' + numberWithCommas(spc.l) + ' m2 <br><span class="subTitle is-6">[' + (r/t*100).toFixed(2).replace(/\./g,',') + '% de '+ numberWithCommas(t) +' m2]</span>';
+    t = myConfig.scp.total * myConfig.scp.e;
+    r = spc.e;
+    document.getElementById('spcEquipements').innerHTML = '' + numberWithCommas(spc.e) + ' m2';
+    //document.getElementById('spcEquipements').innerHTML = '' + numberWithCommas(spc.e) + ' m2 <br><span class="subTitle is-6">[' + (r/t*100).toFixed(2).replace(/\./g,',') + '% de '+ numberWithCommas(t) +' m2]</span>';
+    t = myConfig.scp.total * myConfig.scp.a;
+    r = spc.a;
+    document.getElementById('spcActivités').innerHTML = '' + numberWithCommas(r) + ' m2';
+    // document.getElementById('spcActivités').innerHTML = '' + numberWithCommas(r) + ' m2 <br><span class="subTitle is-6">[' + (r/t*100).toFixed(2).replace(/\./g,',') + '% de '+ numberWithCommas(t) +' m2]</span>';
+    t = myConfig.scp.total;
+    r = spc.a + spc.e + spc.l;
+    document.getElementById('spcTotal').innerHTML = '' + numberWithCommas(r) + ' m2';
+    //document.getElementById('spcTotal').innerHTML = '' + numberWithCommas(r) + ' m2 <br><span class="subTitle is-6">[' + (r/t*100).toFixed(2).replace(/\./g,',') + '% de '+ numberWithCommas(myConfig.scp.total) +' m2]</span>';
+
+    
+    var objectifs = 
+      [{ annee: 2010, spc_l : 520000, spc_a: 650000, spc_e: 130000},
+      { annee: 2018, spc_l : 370000, spc_a: 500000, spc_e: 130000}];
+    var s='';
+    objectifs.forEach( function( one_year) {
+      s+='<tr>';
+      s+='<td>'+one_year.annee+'</td>';
+      s+='<td>'+ (spc.l / one_year.spc_l * 100).toFixed(2).replace(/\./g,',') +'% de ' + numberWithCommas(one_year.spc_l)+ 'm2</td>';
+      s+='<td>'+ (spc.e / one_year.spc_e * 100).toFixed(2).replace(/\./g,',') +'% de ' + numberWithCommas(one_year.spc_e)+ 'm2</td>';
+      s+='<td>'+ (spc.a / one_year.spc_a * 100).toFixed(2).replace(/\./g,',') +'% de ' + numberWithCommas(one_year.spc_a)+ 'm2</td>';
+      var t1=spc.a + spc.e + spc.l;
+      var t2=one_year.spc_a + one_year.spc_e + one_year.spc_l;
+      s+='<td>'+ (t1 / t2 * 100).toFixed(2).replace(/\./g,',') +'% de ' + numberWithCommas(t2)+ 'm2</td>';
+      s+='</tr>';
+    });
+    // table des objectifs
+    
+    
+    element=document.getElementById('tblGoals');
+//    s = '<tr><td>2018</td><td>ok</td></tr>';
+
+    // while(e.firstChild) {
+        element.innerHTML=s;
+    //}
+
+  }
+
+ 
+ 
+  const numberWithCommas = (x) => {
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  }
+  
+
+  
+  
+  buildFilterPanel();
+  document.getElementById("btnFilter").click();
+    
+    
+
+    
+</script>    
+            
+  </body>
+</html>

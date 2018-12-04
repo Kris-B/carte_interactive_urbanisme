@@ -1,0 +1,1594 @@
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">            
+    <title>ZAC IC - carte intéractive</title>
+    
+    <link rel="icon" type="image/ico" href="zac_ic_logo.ico">
+    
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-39069349-11"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-39069349-11');
+    </script>
+    
+    <!-- BULMA CSS -->
+    <link rel="stylesheet" href="css/bulma.min.css">    
+
+    <!-- LEAFLET -->
+    <link rel="stylesheet" href="js/leaflet/leaflet.css"/>
+    <script src="js/leaflet/leaflet.js"></script>
+
+    
+    <script src="js/Chart.bundle.min.js"></script>
+   
+   
+    <!-- jQuery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js" type="text/javascript"></script>
+  
+    <!-- TABLESORT -->
+    <script  type="text/javascript" src="https://unpkg.com/tablesort@5.1.0/src/tablesort.js"></script>
+  
+    <!-- nanogallery2 -->
+    <link  href="https://unpkg.com/nanogallery2@2.3.0/dist/css/nanogallery2.min.css" rel="stylesheet" type="text/css">
+    <script  type="text/javascript" src="https://unpkg.com/nanogallery2@2.3.0/dist/jquery.nanogallery2.min.js"></script>
+
+    <!-- FONT AWESOME -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+    <!--
+    <script defer src="https://use.fontawesome.com/releases/v5.1.0/js/all.js"></script>
+    -->
+
+    <style>
+      .map_container_fullscreen {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        left: 0;
+        top: 0;
+        background: #fff;
+        z-index: 10;
+      }
+      .map_fullscreen {
+        height: calc(100% - 80px);
+      }
+      .map_not_fullscreen {
+        height: 600px;
+      }
+    
+      .modal-card, .modal-content {
+        max-height: calc(100vh - 20px);
+      }
+      
+
+      .is_a_folder,  .is_a_folder_up, .is_a_file {
+        cursor: pointer;
+      }
+      
+      .is_a_folder:before,  .is_a_folder_up:before, .is_a_file:before {
+        display: inline-block;
+        font-style: normal;
+        font-variant: normal;
+        text-rendering: auto;
+        -webkit-font-smoothing: antialiased;
+        font-family: "Font Awesome 5 Free";
+        font-weight: 900;
+        padding-right: 7px;
+        font-size: 1.2rem;
+        color: #3273dc;  
+      }
+
+      .is_a_folder:before {
+        content: "\f07b";
+        padding-left: 8px;
+      }
+      .is_a_folder_up:before {
+        content: "\f65d";
+      }
+      .is_a_file:before {
+        content: "\f15c";
+        padding-left: 8px;
+      }
+      
+
+      /* TABLE SORT - https://github.com/tristen/tablesort */
+      th[role=columnheader]:not(.no-sort) {
+        cursor: pointer;
+      }
+
+      th[role=columnheader]:not(.no-sort):after {
+        content: '';
+        float: right;
+        margin-top: 7px;
+        border-width: 0 4px 4px;
+        border-style: solid;
+        border-color: #404040 transparent;
+        visibility: hidden;
+        opacity: 0;
+        -ms-user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+      }
+
+      th[aria-sort=ascending]:not(.no-sort):after {
+        border-bottom: none;
+        border-width: 4px 4px 0;
+      }
+
+      th[aria-sort]:not(.no-sort):after {
+        visibility: visible;
+        opacity: 0.4;
+      }
+
+      th[role=columnheader]:not(.no-sort):hover:after {
+        visibility: visible;
+        opacity: 1;
+      }
+      /* TABLE SORT - https://github.com/tristen/tablesort */
+
+  </style>
+    
+
+  </head>
+  <body>
+                  
+    <br><br>
+    <h1 class="title has-text-centered">Ivry Confluences - carte interactive de la ZAC</h1>
+    <div class="has-text-centered">
+      <span class="tag is-warning">work-in-progress : données incomplètes / à confirmer</span>
+    </div>
+    <br><br>
+
+
+    
+    <!-- POPUP PROJECT DETAILS -->
+    <div class="modal" id="myPopup" style="z-index:11000;">
+      <div class="modal-background"></div>
+      <div class="modal-card">
+        <!-- Any other Bulma elements you want -->
+        
+        <header class="modal-card-head has-background-primary">
+          <p id="popupTitle" class="modal-card-title has-text-white">Titre</p>
+          <button id="btnPopupClose" class="delete" aria-label="close"></button>
+        </header>
+        <section class="modal-card-body">
+          <!-- MODAL CONTENT ... -->
+        
+          <div class="columns">
+            <div class="column">
+              <label>Architecte: </label><b><label id="popupArchitecte"></label></b><br>
+              <label>Promoteur: </label><b><label id="popupPromoteur"></label></b><br><br>
+              <label>Année de livraison: </label><b><label id="popupDeliveryDate"></label></b><br>
+              <label>Ilôt: </label><b><label id="popupIlot"></label></b><br>
+
+            </div>
+            <div class="column has-text-right">
+              <img id="popupThumbnail" class="has-text-right" src="" alt=""  style="object-fit: cover;height:200px;width:200px;">
+            </div>
+          </div>
+					
+          <div id="popup_nano_map_id" style="border:2px solid #888;height: 200px;"></div>
+
+					<br>
+					
+          <div class="containerX boxX has-background-white-ter" style="padding:5px;">
+            <nav class="level" style="margin-bottom:.5rem;">
+              <div class="level-item has-text-left title is-5">
+                Surface de Plancher
+              </div>
+            </nav>
+            <nav class="level">
+              <div class="level-item has-text-centered">
+                <div>
+                  <p class="heading">Logement</p>
+                  <p id="popupSurfL" class="title is-6 is-primary"></p>
+                </div>
+              </div>
+              <div class="level-item has-text-centered">
+                <div>
+                  <p class="heading">Equipement public</p>
+                  <p id="popupSurfE" class="title is-6"></p>
+                </div>
+              </div>
+              <div class="level-item has-text-centered">
+                <div>
+                  <p class="heading">Activité économique</p>
+                  <p id="popupSurfA" class="title is-6"></p>
+                </div>
+              </div>
+            </nav>
+          </div>
+          <br>
+
+<!--
+          <label><b>Surface logement: </b></label><label id="popupSurfL"></label><br>
+          <label><b>Surface activité économique: </b></label><label id="popupSurfA"></label><br>
+          <label><b>Surface équipement public: </b></label><label id="popupSurfE"></label><br>
+          -->
+          <div id="popupHorsZAC"></div><br>
+          <label><b>Infos: </b></label><br>
+          <div id="popupDesc"></div><br>
+          <br>
+          <div id="popupDocs"></div>
+          <div id="popupGallery"></div>
+          <div id="popupGdrive"></div>
+        </section> 
+    
+        
+      </div>
+      <!--
+      <button id="btnPopupClose"class="modal-close is-large" aria-label="close"></button>
+      -->
+    </div>
+    
+    
+    
+    
+    
+    <!-- MAP + FILTERS -->
+    <div style="margin:10px;">
+      <div id="nano_map_container" style="padding-left:20px;padding-right:20px;">
+      <!-- DROPDOWN FILTER -->
+        <div class="">
+          <div id="nano_dropdownPanelFilter" class="dropdown is-activeX" style="z-index:10000;">
+            <div class="dropdown-trigger" style="margin:1px;">
+              <button id="nano_btnPanelFilter" class="button is-primary is-medium" aria-haspopup="true" aria-controls="nano_dropdown-menu3">
+                <span>Filtre de recherche</span>
+                <span class="icon is-small">
+                  <i class="fas fa-angle-down" aria-hidden="true"></i>
+                </span>
+              </button>
+              <button id="nano_btnFullscreen" class="button is-medium"><i class="fas fa-expand" aria-hidden="true"></i></button>
+              <span ><i id="nano_loading_spinner" class="fas fa-spinner fa-spin" style="color:#ffa500";></i></span>
+            </div>
+            <div class="dropdown-menu" id="nano_dropdown-menu3" role="menu">
+              <div class="dropdown-content has-background-white-ter">
+
+                <nav class="panel">
+
+                  <div class="panel-block">
+                    <div class="columns">
+                      <div class="column">
+                        <label class="label" id="nano_btnFilterKind" style="white-space: nowrap">Type d'opération</label>
+                        <div id="panelFilterKind"></div>
+                      </div>
+                      
+                      <div class="column">
+                        <label class="label" id="nano_btnFilterState" >Statut</label>
+                        <div id="panelFilterState"></div>
+                      </div>
+
+                      <div class="column">
+                        <label class="label" style="white-space: nowrap">Année de livraison</label>
+                        
+                        <div class="field is-horizontal">
+                          <div class="field-label is-normal">
+                            <label class="label">Entre</label>
+                          </div>
+                          <div class="field-body">
+                            <div class="field">
+                              <div class="select">
+                                <select id="nano_lstFromYear">
+                                </select>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="field-label is-normal">
+                            <label class="label">et</label>
+                          </div>
+                          <div class="field-body">
+                            <div class="field">
+                              <div class="select">
+                                <select id="nano_lstToYear">
+                                </select>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <label class="label" style="white-space: nowrap">Localisation</label>
+                        <div class="field-body"><div class="field" style="white-space: nowrap"><label class="checkbox"> <input type="checkbox" name="nano_cbItemOutside" checked value="false" />dans ZAC IC</label></div></div>
+                        <div class="field-body"><div class="field" style="white-space: nowrap"><label class="checkbox"> <input type="checkbox" name="nano_cbItemOutside" checked value="true" />hors ZAC IC</label></div></div>
+                      </div>
+
+                    </div>
+                  </div>
+                  
+                  <div class="panel-block">
+                    <button id="nano_btnFilterCancel" class="button is-outlined is-fullwidth is-black">
+                      <b>Annuler</b>
+                    </button>
+                    <button id="nano_btnFilter" class="button is-outlined is-fullwidth is-link">
+                      <b>Appliquer le filtre</b>
+                    </button>
+
+                  </div>
+                </nav>
+
+
+              </div>
+            </div>
+          </div>
+        </div>
+       
+            
+        <!-- CARTE -->
+        <div id="nano_map_id" style="border:2px solid #888;" class="map_not_fullscreen"></div>
+        <div id="nano_map_legend" style="display: inline-block;"></div>
+      </div>
+    </DIV>
+      
+			
+			
+    <!-- LISTE DE RESULTATS -->
+    <div style="margin:10px;">
+      <br><br>
+      <h3 class="is-size-5 has-text-info"><b>Liste de résultats correspondant à votre filtre de recherche </b></h3>
+      <br>
+      <div style="overflow-x: auto;">
+        <table class="table is-striped is-hoverable" id="nano_hitlist">
+          <thead>
+            <tr>
+              <th>Nom du projet</th>
+              <th>Ilot</th>
+              <th>Architecte</th>
+              <th>Promoteur</th>
+              <th><abbr title="Statut d'avancement">Statut</abbr></th>
+            </tr>
+          </thead>
+          <tbody id="nano_table_hitlist">
+          </tbody>
+        </table>
+      </div>
+		</div>
+			
+			
+
+    <!-- INFOS SURFACES DE PLANCHER -->
+    <div style="margin:10px;">
+      <br><br><br><br>
+      <h3 class="is-size-5 has-text-info"><b>Surface de Plancher des Constructions  </b></h3>
+      <br>
+      <!-- INFORMATIONS -->
+      <div class="container box has-background-white-ter">
+        <nav class="level">
+          <div class="level-item has-text-centered">
+            <div>
+              <p class="heading">Logements</p>
+              <p id="nano_spcLogements" class="title is-5 is-primary"></p>
+            </div>
+          </div>
+          <div class="level-item has-text-centered">
+            <div>
+              <p class="heading">Equipements publics</p>
+              <p id="nano_spcEquipements" class="title is-5"></p>
+            </div>
+          </div>
+          <div class="level-item has-text-centered">
+            <div>
+              <p class="heading">Activités économiques</p>
+              <p id="nano_spcActivites" class="title is-5"></p>
+            </div>
+          </div>
+          <div class="level-item has-text-centered">
+            <div>
+              <p class="heading">Total</p>
+              <p id="nano_spcTotal" class="title is-5"></p>
+            </div>
+          </div>
+        </nav>
+      </div>
+    
+
+
+      <br><br>
+      <br><br>
+      <h3 class="is-size-5 has-text-info"><b>Objectifs de Surfaces de Plancher</b></h3>
+      <br>
+      <div class="container box has-background-white-ter">
+        <nav class="level">
+          <div class="level-item has-text-centered">
+            <div>
+              <p class="title is-5 is-primary">Total</p>
+              <canvas id="nano_chart_spc_t" width="500" height="300"></canvas>
+            </div>
+          </div>
+        </nav>
+        <nav class="level">
+          <div class="level-item has-text-centered">
+            <div>
+              <p class="title is-5 is-primary">Logements</p>
+              <canvas id="nano_chart_spc_l" width="300" height="200"></canvas>
+            </div>
+          </div>
+          <div class="level-item has-text-centered">
+            <div>
+              <p class="title is-5 is-primary">Equipements publiques</p>
+              <canvas id="nano_chart_spc_e" width="300" height="200"></canvas>
+            </div>
+          </div>
+          <div class="level-item has-text-centered">
+            <div>
+              <p class="title is-5 is-primary">Activités économiques</p>
+              <canvas id="nano_chart_spc_a" width="300" height="200"></canvas>
+            </div>
+          </div>
+        </nav>
+      </div>
+    </div>
+
+
+    <!-- DOCUMENT BROWSER -->
+    <div style="margin:10px;">
+      <br><br>
+      <br><br>
+      <h3 class="is-size-5 has-text-info"><b>Documentation</b></h3>
+      <br>
+      <div  id="nano_list_documents" style="max-height:200px;overflow-y:auto;display:inline-block;min-width:400px;border:2px solid #888;margin-left:20px;margin-right:20px;" >
+      </div >
+      <br><br>
+    <div>
+
+
+
+
+    <!-- DOC BOTTOM -->
+    <div style="margin:10px;">
+      <br><br>
+      <br><br><br>
+      <div class="has-text-centered is-size-7">
+        <b>outil développé par christophe brisbois - version beta - aucune garantie n'est offerte quant à l'exactitude des données</b>
+        <br>
+        <button id="" class="button is-outlined is-primary">
+          <a href="https://docs.google.com/spreadsheets/d/1pKGg3MA1YLSWFuFEqLwJLYzuVPeNAOEMzpw6-XC8_e8/edit#gid=0"  target="_blank"><i class="fas fa-edit"></i> &nbsp;  Modifier la carte</a>
+        </button>
+      </div>
+    </div>
+
+
+<script>
+
+  // EXPORT OSM polygons (WKT, GeoJSON, poly, Image) -> http://polygons.openstreetmap.fr/
+  // CROP IMAGES : https://www.befunky.com/features/crop-photo/
+  // https://www.freeformatter.com/json-formatter.html
+  // DRAW POLYGONS -> http://geojson.io
+  // http://umap.openstreetmap.fr/nl/map/carte-des-projets-damenagement-ivry-sur-seine_138266#15/48.8059/2.3952
+  // slideshare franges du parc : https://fr.slideshare.net/mairieivry/ivry-confluences-concertation-microquartier-les-franges-du-parc-de-la-confluence
+  // slideshare déplacements ZIC https://fr.slideshare.net/mairieivry/dplacements-dans-ivry-confluences?next_slideshow=1
+  // plan ZAC avec trous : http://www.mrae.developpement-durable.gouv.fr/IMG/pdf/180216_mrae_avis_sur_le_programme_immobilier_au_droit_des_anciennes_imprimeries_du_monde_a_ivry_94_.pdf
+
+  // SPC : Surface de Plancher des Constructions
+  // category : activité économique, équipement public, logement
+  var nano_map_areas = [
+    { name: 'Micro quartier gare', id: 'micro_quartier_gare', kind: 'micro_quartier', delivery_date: '', state: 'projet', keywords: '', desc: '' },
+    { name: 'Micro quartier Square Prudhon', id: 'micro_quartier_prudhon', kind: 'micro_quartier', delivery_date: '', state: 'projet', keywords: '', desc: '' },
+    { name: 'Micro Quartier Rigaud', id: 'micro_quartier_rigaud', kind: 'micro_quartier', delivery_date: '', state: 'projet', keywords: '', desc: '' },
+    { name: 'Micro Quartier Couronne Gambetta', id: 'micro_quartier_gambetta', kind: 'micro_quartier', delivery_date: '', state: 'projet', keywords: '', desc: '' },
+    { name: 'Micro Quartier Franges du Parc', id: 'micro_quartier_franges_parc', kind: 'micro_quartier', delivery_date: '', state: 'projet', keywords: '', desc: '' },
+    { name: 'Villa Molière', id: 'villa_moliere', category: 'l', kind: 'logement', spc_l: 9100, delivery_date: '01/12/2015', state: 'livré', keywords: 'privé, social', gallery: true, desc: '122 logements (85 en accession, 37 bailleur social IDF Habitat)<br>Livrée en décembre 2015<br>Promoteur : Bouygues Immobilier<br>Architecte / MOE : Frédéric LEBARD https://www.studio-afl.com/' },
+    { name: 'Silver Innov', id: 'silver_innov', category: 'a', kind: 'tertiaire', spc_a: 4040, delivery_date: '01/07/2014', state: 'livré', gallery: true, keywords: '', desc: 'Plateforme Charles-Foix Silver\’Innov http://silver-innov.fr/' },
+    { name: 'Station Géothermie', id: 'station_geothermie', category: 'a', kind: 'tertiaire', spc_a: 0, delivery_date: '01/06/2017', state: 'livré', gallery: false, keywords: '', desc: '' },
+    { name: 'Quai aux Grains', id: 'quai_aux_grains', category: 'l', kind: 'logement', spc_l: 13400, spc_a: 1190, delivery_date: '01/12/2015', state: 'livré', gallery: true, keywords: 'privé, social', desc: 'Projet urbain, 78 logements sociaux, 96 logements libres, 170 stationnements et espaces extérieurs.<br>Maître d’ouvrage : BRÉMOND, Équipe : ARCHIKUBIK ' },
+    { name: 'Résidence Logis-Transport', id: 'residence_logis_transport', category: 'l', spc_l: 6020, kind: 'logement', delivery_date: '01/06/2017', state: 'livré', gallery: true, keywords: 'social', desc: 'Logements : 70 en locatif social<br>stationnement : 36 places en sous-sol<br>Maitre d\'ouvrage : Logis-transports<br>Architectes : Pierre et Marjolijn Boudry<br>Adresse: 13 rue pierre rigaud et 3 rue des lampes, 94200 ivry-sur-seine' },
+    { name: 'Résidence intergénérationnelle', id: 'residence_intergenerationnelle', category: 'l', spc_l: 5200, spc_e: 700, kind: 'logement', delivery_date: '01/06/2017', state: 'livré', gallery: true, keywords: 'social', desc: '129 logements, 1 crèche, 31 places de parking' },
+    { name: 'Lumen', id: 'lumen', category: 'l', kind: 'logement', scp_l: 8750, delivery_date: '01/01/2015', gallery: true, state: 'livré', keywords: '', desc: '' },
+    { name: 'Duo en Seine', id: 'duo_en_seine', category: 'l', kind: 'logement', spc_l: 11000, spc_a: 2230, delivery_date: '01/01/2015', gallery: true, state: 'livré', keywords: '', desc: '' },
+    { name: 'Tours de l\'atelier Montrouge', id: 'tours_montrouge', category: 'l', kind: 'logement', spc_l: 1650, gallery: true, delivery_date: '01/01/2015', state: 'livré', keywords: '', desc: 'Réhabilitation' },
+    { name: 'Madiba', id: 'madiba', category: 'l', kind: 'logement', spc_l: 8156, gallery: true, delivery_date: '01/01/2015', state: 'livré', keywords: '', desc: '64 logements en accession (4970m2), 40 logements locatifs sociaux (3186m2).<br>Maître d’ouvrage : Groupe Brémond – SCCV Madiba<br>Maître d’œuvre : Gaétan Engasser – agence Engasser & associés' },
+    { name: 'Le 96', id: 'le96_pvc', category: 'l', kind: 'logement', spc_l: 0, gallery: false, delivery_date: '01/01/2016', state: 'livré', keywords: '', desc: '39 logements en accession à la propriété<br>19 logements sociaux' },
+    { name: 'Cité Emile Blin', id: 'cite_emile_blin', category: 'l', kind: 'logement', spc_l: 4490, gallery: false, delivery_date: '01/01/2016', state: 'livré', keywords: '', desc: '61 logements locatifs sociaux<br>Architectes : Atelier du Pont<br>Bailleur: OPH Ivry' },
+    { name: 'Résidence Madeleine Delbrel', id: 'residence_madeleine_delbrel', category: 'l', kind: 'logement', spc_l: 2860, gallery: false, delivery_date: '01/12/2018', state: 'en cours de réalisation', keywords: '', desc: 'Maître d\’ouvrage : Coallia<br>Surface SHON : 2860 m2<br>Montant des travaux : 4 870 000 € HT<br>Partenaire : BETEREM Ingénierie (BET TCE + ECO)' },
+    { name: 'Groupe scolaire Rosalind Franklin', category: 'e', id: 'rosalind_franklin', kind: 'établissement_scolaire', spc_e: 4925, delivery_date: '01/09/2015', gallery: true, state: 'livré', keywords: '', desc: '' },
+    { name: 'Collège des Confluences', category: 'e', id: 'college_confluences', kind: 'établissement_scolaire', spc_e: 7000, delivery_date: '01/09/2019', state: 'en cours de réalisation', keywords: '', desc: 'Construction d\'un collège pour 600 élèves, avec gymnase accessible au public et six appartements de fonction.<br>MOA: CONSEIL GÉNÉRAL DU VAL-DE-MARNE<br>MOE: AMELLER, DUBOIS ET ASSOCIÉS<br>Coût prévisionnel : 13,7 M€ HT' },
+    { name: 'Parvis Collège des Confluences', id: 'college_confluences_parvis', category: 'e', kind: 'square', spc_e: 1100, delivery_date: '01/09/2019', state: 'en cours de réalisation', keywords: '', desc: '' },
+    { name: 'Square de la Minoterie', id: 'square_minoterie', category: 'e', kind: 'square', spc_e: 2200, delivery_date: '01/01/2015', state: 'livré', keywords: '', desc: '' }
+  ];
+  
+  
+  
+  var nano_map_config = {
+    scp : { total : 1300000, l: 0.4, a: 0.5, e: 0.1 },
+    data_url : 'https://spreadsheets.google.com/feeds/list/1pKGg3MA1YLSWFuFEqLwJLYzuVPeNAOEMzpw6-XC8_e8/od6/public/values?alt=json',
+    baseURL: 'projects/',
+    baseURL: 'https://urbanicc.fr/zac_ic/projects/',
+    thumbnails: 'https://github.com/Kris-B/zac_ic/raw/master/thumbnails/',
+    // baseURL: 'data/',
+    // nano_photos_provider: 'https://nano.gallery/nano_photos_provider2/nano_photos_provider2.php',
+    nano_photos_provider: 'https://urbanicc.fr/zac_ic/nano_photos_provider2/nano_photos_provider2.php',
+    docs_provider: 'https://urbanicc.fr/zac_ic/docs/',
+    //docs_provider: 'http://ivry.brisbois.fr/zac_ic/',
+    project_category : { a:'activité économique', e: 'équipement public', l: 'logement'},
+    kind_unselected : ['micro quartier', 'autre ZAC'],
+    style: {
+      kind: {
+        default: { 'stroke': '#f00', 'stroke_width': 2, 'stroke_opacity': 1, 'fill': '#ff0000', 'fill_opacity': 1},
+        logement: { 'stroke': '#444', 'stroke_width': 2, 'stroke_opacity': 1, 'fill': '#ffff00', 'fill_opacity': 0.5},
+        équipement: { 'stroke': '#444', 'stroke_width': 2, 'stroke_opacity': 1, 'fill': '#0000ff', 'fill_opacity': 0.5},
+        activitééconomique: { 'stroke': '#444', 'stroke_width': 2, 'stroke_opacity': 1, 'fill': '#ff8800', 'fill_opacity': 0.5},
+        microquartier: { 'stroke': '#444', 'stroke_width': 2, 'stroke_opacity': 1, 'fill': '#00ffff', 'fill_opacity': 0.5},
+        établissementscolaire: { 'stroke': '#444', 'stroke_width': 2, 'stroke_opacity': 1, 'fill': '#ff00ff', 'fill_opacity': 0.5},
+        espacevert: { 'stroke': '#444', 'stroke_width': 2, 'stroke_opacity': 1, 'fill': '#00ff00', 'fill_opacity': 0.5},
+        circulationdouce: { 'stroke': '#f0f', 'stroke_width': 6, 'stroke_opacity': 1, 'fill': '#f0f', 'fill_opacity': 1},
+        transportencommun: { 'stroke': '#0ff', 'stroke_width': 6, 'stroke_opacity': 1, 'fill': '#0ff', 'fill_opacity': 1},
+        ilot: { 'stroke': '#00f', 'stroke_width': 2, 'stroke_opacity': 1, 'fill': '#fa0', 'fill_opacity': 0.4},
+        transport: { 'stroke': '#00f', 'stroke_width': 2, 'stroke_opacity': 1, 'fill': '#088', 'fill_opacity': 0.4},
+        autreZAC: { 'stroke': '#888', 'stroke_width': 5, 'stroke_opacity': 0.8, 'fill': '#f00', 'fill_opacity': 0.5}
+      }
+    },
+    table_data : { name: 'Nom du projet', id: 'Identifiant', kind: 'Type opération', delivery_date: 'Date de livraison', state: 'Etat d\'avancement', keywords: 'Mots clés', desc: 'Description du projet' },
+    json : {
+			name : 'gsx$nom',
+			ilot	 : 'gsx$lot',
+			id: 'gsx$identifiant',
+			category: 'gsx$categorie',
+			kind: 'gsx$type',
+			architecte: 'gsx$architecte',
+			promoteur: 'gsx$operateur',
+			annee_livraison: 'gsx$anneelivraison',
+			delivery_date: 'gsx$datedelivraison',
+			state: 'gsx$statutdavancement',
+
+			sp_log_total: 'gsx$sdplogementstotal',
+			sp_log_accession: 'gsx$sdplogementsaccession',
+			sp_log_social: 'gsx$sdplogementssocial',
+			sp_log_autre: 'gsx$sdplogementsautre',
+			sp_activite_total: 'gsx$sdpactivitetotal',
+			sp_activite_bureaux: 'gsx$sdpbureaux',
+			sp_activite_commerces: 'gsx$sdpcommercesetservices',
+			sp_equi_pub_total: 'gsx$sdpequipementpublictotal',
+			sp_equi_pub_superstructure: 'gsx$sdpepsuperstructure',
+			sp_equi_pub_espaces_verts: 'gsx$surfaceespacesverts',
+			sp_equi_pub_autre: 'gsx$surfaceepautre',
+      
+      idgdrive: 'gsx$idgdrive',
+      idimagette: 'gsx$idimagette',
+			
+			spc_l: 'gsx$spclogement',
+			spc_e: 'gsx$spcéquipementpublic',
+			spc_a: 'gsx$spcactivitééconomique',
+			gallery: 'gsx$galerie',
+			outside: 'gsx$horszac',
+			desc: 'gsx$description',
+			geodata: 'gsx$donnéesgéographiques' },
+		empty_gif : 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+
+  };
+  
+  var nano_charts_data = {
+    labels : [],  // years
+    // les réalisés
+    logements : [],
+    activites : [],
+    equipements : [],
+    totaux : [],
+    // les objectifs
+    ologements : [],
+    oactivites : [],
+    oequipements : [],
+    ototaux : []
+  };
+  
+  // var objectifs = [
+  var nano_targets = [
+    { annee: 2010, desc: 'Objectif initial approuvé en CM - 2010 :', spc_l : 520000, spc_a: 650000, spc_e: 130000},
+    { annee: 2018, desc:'Objectif révisé - 2018 : ', spc_l : 370000, spc_a: 500000, spc_e: 130000}
+  ];
+  
+
+  
+  // #####################
+  // ##### BUILD MAP #####
+  // #####################
+  
+  // Init map and center view
+	var nano_map = L.map('nano_map_id').setView([48.814564, 2.398497], 16);
+
+  // create the tile layer with correct attribution
+  var osmUrl='http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+  var osmAttrib='Map data © <a href="http://openstreetmap.org">OpenStreetMap</a> contributors | Layers © Christophe Brisbois';
+  var osm = new L.TileLayer(osmUrl, {attribution: osmAttrib});
+
+  nano_map.addLayer(osm);
+  
+	// init popup map
+	var popup_nano_map;
+
+
+  // ####################
+  // ##### HIT LIST #####
+  // ####################
+  // https://github.com/tristen/tablesort
+  new Tablesort(document.getElementById('nano_hitlist'));  
+  
+  // ########################
+  // ##### GOOGLE SHEET #####
+  // ########################
+  
+  // download data from Google Sheets as JSON
+  var request = new XMLHttpRequest();
+  request.open('GET', nano_map_config.data_url, true);
+  request.setRequestHeader('Content-Type', 'application/json');
+  request.onload = function(data) {
+    if( request.status == 404 ) { return; };
+    nano_map_areas = JSON.parse(data.target.response);
+    nano_map_areas = nano_map_areas.feed.entry;
+    //console.dir(nano_map_areas);
+
+    // convert string to integer or boolean
+    nano_map_areas.forEach( function(item) {
+      item[nano_map_config.json.sp_log_total].$t = propertyToFloat( item[nano_map_config.json.sp_log_total].$t );
+      item[nano_map_config.json.sp_log_accession].$t = propertyToFloat( item[nano_map_config.json.sp_log_accession].$t );
+      item[nano_map_config.json.sp_log_social].$t = propertyToFloat( item[nano_map_config.json.sp_log_social].$t );
+      item[nano_map_config.json.sp_log_autre].$t = propertyToFloat( item[nano_map_config.json.sp_log_autre].$t );
+      item[nano_map_config.json.sp_activite_total].$t = propertyToFloat( item[nano_map_config.json.sp_activite_total].$t );
+      item[nano_map_config.json.sp_activite_bureaux].$t = propertyToFloat( item[nano_map_config.json.sp_activite_bureaux].$t );
+      item[nano_map_config.json.sp_activite_commerces].$t = propertyToFloat( item[nano_map_config.json.sp_activite_commerces].$t );
+      item[nano_map_config.json.sp_equi_pub_total].$t = propertyToFloat( item[nano_map_config.json.sp_equi_pub_total].$t );
+      item[nano_map_config.json.sp_equi_pub_superstructure].$t = propertyToFloat( item[nano_map_config.json.sp_equi_pub_superstructure].$t );
+      item[nano_map_config.json.sp_equi_pub_espaces_verts].$t = propertyToFloat( item[nano_map_config.json.sp_equi_pub_espaces_verts].$t );
+      item[nano_map_config.json.sp_equi_pub_autre].$t = propertyToFloat( item[nano_map_config.json.sp_equi_pub_autre].$t );
+
+      item[nano_map_config.json.spc_l].$t = propertyToFloat( item[nano_map_config.json.spc_l].$t );
+      item[nano_map_config.json.spc_a].$t = propertyToFloat( item[nano_map_config.json.spc_a].$t );
+      item[nano_map_config.json.spc_e].$t = propertyToFloat( item[nano_map_config.json.spc_e].$t );
+      item[nano_map_config.json.gallery].$t = propertyToBoolean( item[nano_map_config.json.gallery].$t );
+      item[nano_map_config.json.outside].$t = propertyToBoolean( item[nano_map_config.json.outside].$t );
+    });
+
+
+    buildFilterPanel();
+    if( document.getElementById("nano_loading_spinner") !== null ) {
+      document.getElementById("nano_loading_spinner").style.display = 'none';
+    }
+    
+    // force filter
+    document.getElementById("nano_btnFilter").click();
+  };
+  request.send();
+
+  
+  
+  // ########################
+  // ##### FILTER PANEL #####
+  // ########################
+  
+  // Display/hide filter panel
+  var el = document.getElementById("nano_btnPanelFilter");
+  el.addEventListener("click", function(){
+    var box = document.getElementById('nano_dropdownPanelFilter');
+    box.classList.toggle('is-active');
+  }, false);
+
+  // Fullscreen mode on/off switch
+  var el = document.getElementById("nano_btnFullscreen");
+  el.addEventListener("click", function(){
+    document.getElementById('nano_map_container').classList.toggle('map_container_fullscreen');
+    document.getElementById('nano_map_id').classList.toggle('map_not_fullscreen');
+    document.getElementById('nano_map_id').classList.toggle('map_fullscreen');
+     nano_map.invalidateSize();
+  }, false);
+  
+  // Click on filter column header - KIND
+  var el = document.getElementById("nano_btnFilterKind");
+  el.addEventListener("click", function(){
+    var cb_kind = document.getElementsByName('cbItemKind');
+    var c = !cb_kind[0].checked;
+    for(var i=0; i< cb_kind.length; i++){
+      cb_kind[i].checked = c;
+    }
+  }, false);
+  
+  // Click on filter column header - STATE
+  var el = document.getElementById("nano_btnFilterState");
+  el.addEventListener("click", function(){
+    var cb_state = document.getElementsByName('cbItemState');
+    var c = !cb_state[0].checked;
+    for(var i=0; i< cb_state.length; i++){
+      cb_state[i].checked = c;
+    }
+  }, false);
+  
+
+  // Close filter panel
+  var el = document.getElementById("nano_btnFilterCancel");
+  el.addEventListener("click", function(){
+    
+    var box = document.getElementById('nano_dropdownPanelFilter');
+    box.classList.remove('is-active');
+  });
+
+
+  // Apply layers filter
+  var el = document.getElementById("nano_btnFilter");
+  el.addEventListener("click", function(){
+    
+    var box = document.getElementById('nano_dropdownPanelFilter');
+    box.classList.remove('is-active');
+    
+    // clear map - remove all layers
+    nano_map.eachLayer(function (layer) {
+      if( layer._url === undefined ) {
+        nano_map.removeLayer(layer);
+      }
+    });
+
+    // download map ZAC_IC
+    var request = new XMLHttpRequest();
+    request.open('GET', nano_map_config.baseURL + 'zac_ic.geojson', true);
+    request.setRequestHeader('Content-Type', 'application/json');
+    request.onload = function(data) {
+      if( request.status == 404 ) { return; };
+      var newLayer = L.geoJson(JSON.parse(data.target.response), {
+        style: function(feature) {
+          return {
+            fillColor: '#fff',
+            fillOpacity: 0,
+            color: '#f00',
+            weight: 4,
+            opacity: 1
+            };
+          }
+      }).addTo(nano_map);
+			nano_map.fitBounds(newLayer.getBounds());	
+			
+      // download and add holes
+      request = new XMLHttpRequest();
+      request.open('GET', nano_map_config.baseURL + 'zac_ic_trous.geojson', true);
+      request.setRequestHeader('Content-Type', 'application/json');
+      request.onload = function(data) {
+        if( request.status == 404 ) { return; };
+        var newLayer = L.geoJson(JSON.parse(data.target.response), {
+          style: function(feature) {
+            return {
+              fillColor: '#00f',
+              fillOpacity: 0.05,
+              color: '#00f',
+              weight: 2,
+              opacity: 0.5,
+              dashArray : "3,5"
+              };
+            }
+        }).addTo(nano_map);
+        DisplayLayersFiltered();        
+      };
+      request.send();
+    };
+    request.send();
+    
+  }, false);
+ 
+
+  // Display the filtered layers 
+  var DisplayLayersFiltered = function( ) {
+
+    // kind
+    var cb_kind = document.getElementsByName('cbItemKind');
+		var lst_kind = [];
+		for(var i=0; i< cb_kind.length; i++){
+			if( cb_kind[i].type == 'checkbox' && cb_kind[i].checked == true ) {
+				lst_kind.push(cb_kind[i].value);
+      }
+		}
+    
+    // state
+    var cb_state = document.getElementsByName('cbItemState');
+		var lst_state = [];
+		for(var i=0; i<cb_state.length; i++){
+			if( cb_state[i].type == 'checkbox' && cb_state[i].checked == true ) {
+				lst_state.push(cb_state[i].value);
+      }
+		}
+
+    // outside ZAC IC area
+    var cb_outside = document.getElementsByName('nano_cbItemOutside');
+		var lst_outside = [];
+		for(var i=0; i<cb_outside.length; i++){
+			if( cb_outside[i].type == 'checkbox' && cb_outside[i].checked == true ) {
+				lst_outside.push(propertyToBoolean(cb_outside[i].value));
+      }
+		}
+    
+    // from year
+    var se = document.getElementById('nano_lstFromYear');
+    var from_year = se.options[se.selectedIndex].text;
+    // to year
+    se = document.getElementById('nano_lstToYear');
+    var to_year = se.options[se.selectedIndex].text;
+    
+    
+		var nano_hitlist = '';
+		var item_idx = 0;
+		
+    var spc = { a: 0, l: 0, e: 0 };   // totaux des surfaces de plancher des éléments filtrés
+
+		// loop data
+    nano_map_areas.forEach( function(item) {
+			var cmp_year = dataField(item, 'annee_livraison');
+			
+      if( cmp_year == null || cmp_year == '' ) {
+        cmp_year = from_year;   
+      }
+      var is_kind_ok = isInArray(lst_kind, dataField(item, 'kind'));
+      var is_state_ok = isInArray(lst_state, dataField(item, 'state'));
+
+      // var is_state_ok = lst_state.findIndex(str => dataField(item, 'state').toLowerCase() === str.toLowerCase());
+      //if( is_kind_ok >= 0 && is_state_ok >= 0 && lst_outside.indexOf(item[nano_map_config.json.outside].$t) > -1 && cmp_date >= from_date && cmp_date <= to_date  ) {
+      if( is_kind_ok && is_state_ok && lst_outside.indexOf(dataField(item, 'outside')) > -1  && cmp_year >= from_year && cmp_year <= to_year ) {
+        
+				// add layer to map
+				GetAndDisplayLayer(item);
+        
+				// add one row to hitlist table
+				nano_hitlist += '<tr class="nano_hitlist_row">';
+				nano_hitlist += '  <td class="has-text-left has-text-link" data-nano-id="' + item_idx + '" style="font-weight:bold;">' + getKindColor(dataField(item, 'kind')) + ' ' + dataField(item, 'name') + '</td>';
+				nano_hitlist += '  <td class="has-text-left" data-nano-id="' + item_idx + '">' + dataField(item, 'ilot') + '</td>';
+				nano_hitlist += '  <td class="has-text-left" data-nano-id="' + item_idx + '">' + dataField(item, 'architecte') + '</td>';
+				nano_hitlist += '  <td class="has-text-left" data-nano-id="' + item_idx + '">' + dataField(item, 'promoteur') + '</td>';
+				nano_hitlist += '  <td class="has-text-left" data-nano-id="' + item_idx + '">' + dataField(item, 'state') + '</td>';
+    
+        var thmb = dataField( item, 'idimagette')
+        if( thmb != '' ) {
+            thmb = nano_map_config.thumbnails + '/' + thmb;
+        }
+				else {
+					thmb = nano_map_config.empty_gif;
+				}
+				nano_hitlist += '  <td class="has-text-left" data-nano-id="' + item_idx + '"><img class="has-text-right" src="' + thmb + '" alt=""  style="object-fit: cover;height:40px;width:40px;"></td>';
+				nano_hitlist += '</tr>';
+				
+				
+        if( item[nano_map_config.json.outside].$t === false ) {
+          // surface logement
+          if( item[nano_map_config.json.spc_l].$t != undefined ) {
+            spc.l += item[nano_map_config.json.spc_l].$t;
+          }
+          // surface activité économique
+          if( item[nano_map_config.json.spc_a].$t != undefined ) {
+            spc.a += item[nano_map_config.json.spc_a].$t;
+          }
+          // surface équipement public
+          if( item[nano_map_config.json.spc_e].$t != undefined ) {
+            spc.e += item[nano_map_config.json.spc_e].$t;
+          }
+        }
+      }
+			
+			item_idx++;
+    });
+		
+		// populate hitlist
+		nano_table = document.getElementById('nano_table_hitlist');
+		nano_table.innerHTML = nano_hitlist;
+
+
+
+
+
+    
+    // Afficher les totaux des surfaces de plancher des éléments filtrées
+    if( document.getElementById('nano_spcLogements') !== null ) {
+      var t = nano_map_config.scp.total * nano_map_config.scp.l;
+      var r = spc.l;
+      document.getElementById('nano_spcLogements').innerHTML = '' + numberWithCommas(spc.l) + ' m2</span>';
+      // document.getElementById('nano_spcLogements').innerHTML = '' + numberWithCommas(spc.l) + ' m2 <br><span class="subTitle is-6">[' + (r/t*100).toFixed(2).replace(/\./g,',') + '% de '+ numberWithCommas(t) +' m2]</span>';
+      t = nano_map_config.scp.total * nano_map_config.scp.e;
+      r = spc.e;
+      document.getElementById('nano_spcEquipements').innerHTML = '' + numberWithCommas(spc.e) + ' m2';
+      //document.getElementById('nano_spcEquipements').innerHTML = '' + numberWithCommas(spc.e) + ' m2 <br><span class="subTitle is-6">[' + (r/t*100).toFixed(2).replace(/\./g,',') + '% de '+ numberWithCommas(t) +' m2]</span>';
+      t = nano_map_config.scp.total * nano_map_config.scp.a;
+      r = spc.a;
+      document.getElementById('nano_spcActivites').innerHTML = '' + numberWithCommas(r) + ' m2';
+      // document.getElementById('nano_spcActivites').innerHTML = '' + numberWithCommas(r) + ' m2 <br><span class="subTitle is-6">[' + (r/t*100).toFixed(2).replace(/\./g,',') + '% de '+ numberWithCommas(t) +' m2]</span>';
+      t = nano_map_config.scp.total;
+      r = spc.a + spc.e + spc.l;
+      document.getElementById('nano_spcTotal').innerHTML = '' + numberWithCommas(r) + ' m2';
+      //document.getElementById('nano_spcTotal').innerHTML = '' + numberWithCommas(r) + ' m2 <br><span class="subTitle is-6">[' + (r/t*100).toFixed(2).replace(/\./g,',') + '% de '+ numberWithCommas(nano_map_config.scp.total) +' m2]</span>';
+    }
+  }
+	
+	// Click on hitlist cell --> display popup with project details
+	document.getElementById('nano_table_hitlist').onclick = function(e){
+		var e = e || window.event;
+		var target = e.target || e.srcElement;
+		if( target.tagName.toLowerCase() ==  "td") {
+			nano_popup_project( nano_map_areas[target.dataset.nanoId] );
+		}
+	};
+
+	
+	// calcul des surface de plancher de plancher d'un projet
+	var nano_project_spc = function ( item ) {
+		var spc = { a: 0, l: 0, e: 0 };
+
+		// logement
+		if( dataField( item, 'sp_log_total') != '' ) {
+			spc.l = dataField( item, 'sp_log_total');
+		}
+		else {
+			spc.l = dataField( item, 'sp_log_accession') + dataField( item, 'sp_log_social') + dataField( item, 'sp_log_autre'); 
+		}
+		
+		// activité économiques
+		if( dataField( item, 'sp_activite_total') != '' ) {
+			spc.a = dataField( item, 'sp_activite_total');
+		}
+		else {
+			spc.a = dataField( item, 'sp_activite_bureaux') + dataField( item, 'sp_activite_commerces'); 
+		}
+
+		// équipements publics
+		if( dataField( item, 'sp_equi_pub_total') != '' ) {
+			spc.e = dataField( item, 'sp_equi_pub_total');
+		}
+		else {
+			spc.e = dataField( item, 'sp_equi_pub_superstructure') + dataField( item, 'sp_equi_pub_espaces_verts') + dataField( item, 'sp_equi_pub_autre'); 
+		}
+		
+		return spc;
+		
+	}
+	
+	
+var dataField = function ( item, field ) {
+	if( item[nano_map_config.json[field]].$t == undefined ) {
+		return '';
+	}
+  return item[nano_map_config.json[field]].$t;
+};
+
+// case insensitive
+var isInArray = function( array, value ) {
+  var pos = array.findIndex(str => value.toLowerCase() === str.toLowerCase());
+  if( pos < 0 ) {
+    return false ;
+  }
+  else {
+    return true;
+  }
+}
+
+  
+  // Build the filter panel based on the content of the area custom datas
+  var buildFilterPanel = function () {
+    
+    var lst_kind = [];
+    var lst_state = ['projet', "fiche de lot", "PC", "en cours de réalisation", "livré"];
+    var lst_year = [];
+
+    // loop over each map area --> retrive kind, state, date
+    nano_map_areas.forEach( function(item) {
+
+			if( isInArray(lst_kind, dataField(item, 'kind')) === false ) {
+        if( dataField(item, 'kind') != "" ) {
+          lst_kind.push(dataField(item, 'kind') );
+        }
+      }
+
+      if( isInArray(lst_state, dataField(item, 'state')) === false  ) {
+        lst_state.push(dataField(item, 'state'));
+      }
+
+      
+			if( isInArray(lst_year, dataField(item, 'annee_livraison')) === false ) {
+        if( dataField(item, 'annee_livraison') != "" ) {
+          lst_year.push(dataField(item, 'annee_livraison') );
+        }
+      }
+			/*
+      if( dataField(item, 'delivery_date') != '' ) { 
+        var date_parts = dataField(item, 'delivery_date').split("/");
+        item.delivery_date_internal = new Date( date_parts[2], date_parts[1]-1, date_parts[0] );
+        if( lst_year.includes( date_parts[2] ) === false ) {
+          lst_year.push( date_parts[2] );
+        }
+      }
+      else {
+        item.delivery_date_internal = null;
+      }
+			*/
+    });
+    
+    lst_kind.sort();
+    // lst_state.sort();
+    lst_year.sort();
+    
+    // populate area KIND
+    var legende = '';
+    // limite ZAC
+    legende += '<div style="display: inline-block;"><div style="display:inline-block; background-color:#ddd;opacity:1;width:20px;height:15px;border:2px solid #f00;"> </div> Limite ZAC IC &nbsp; </div>';
+    // périmètre hors ZAC
+    legende += '<div style="display: inline-block;"><div style="display:inline-block; background-color: rgba(0, 0, 255, .5);;opacity:0.5;width:20px;height:15px;border:2px dashed #00f;"> </div> Périmètre hors ZAC IC &nbsp; </div>';
+    lst_kind.forEach( function(item) {
+      var div = document.createElement('div');
+
+      var c = 'checked';
+      if( isInArray( nano_map_config.kind_unselected, item) === true  ) { 
+        c = '';
+      }
+      
+      
+      
+      var cfg = nano_map_config.style.kind[item.replace(/ /g,'')];      // without spaces
+      if( cfg == undefined ) { 
+        cfg = nano_map_config.style.kind[Object.keys(nano_map_config.style.kind)[0]];   // default settings (first property)
+      }
+      div.innerHTML = '<div class="field-body"><div class="field" style="white-space: nowrap"><label  class="checkbox"><input type="checkbox" name="cbItemKind" '+c+' value="' + item + '" />' + getKindColor(item) + ' ' + item.replace(/_/gi, ' ') +'</label></div></div>';
+      legende += '<div style="display: inline-block;">' + getKindColor(item) + ' ' + item.replace(/_/gi, ' ') + ' &nbsp; </div>';
+      document.getElementById('panelFilterKind').appendChild(div);    
+    });
+    //console.log(legende);
+    document.getElementById('nano_map_legend').innerHTML = legende;
+    
+    // populate area STATE
+    lst_state.forEach( function(item) {
+      var div = document.createElement('div');
+      div.innerHTML = '<div class="field-body"><div class="field" style="white-space: nowrap"><label class="checkbox"> <input type="checkbox" name="cbItemState" checked value="' + item + '" /> '+ item.replace(/_/gi, ' ') +' </label></div></div>';
+      document.getElementById('panelFilterState').appendChild(div);    
+    });
+    
+    
+    // populate area MONTH + YEAR
+    lst_year.forEach( function(item) {
+      var opt = document.createElement('option');
+      opt.innerHTML = item;
+      document.getElementById('nano_lstFromYear').appendChild(opt);
+      opt = document.createElement('option');
+      opt.innerHTML = item;
+      document.getElementById('nano_lstToYear').appendChild(opt);
+    });
+    var se = document.getElementById('nano_lstToYear');
+    se.selectedIndex = se.options.length-1;
+
+  
+    // collect and build data for the CHARTS
+    if( document.getElementById("nano_chart_spc_t") !== null ) {
+      
+      nano_charts_data.labels = [];    
+      nano_charts_data.logements = [];
+      nano_charts_data.equipements = [];
+      nano_charts_data.activites = [];
+      nano_charts_data.totaux = [];
+      for( var y = lst_year[0] ; y <= lst_year[lst_year.length-1]; y++ ) {
+        var r=scpParAn(y);
+        nano_charts_data.labels.push(y);
+        nano_charts_data.logements.push(r.l);
+        nano_charts_data.equipements.push(r.e);
+        nano_charts_data.activites.push(r.a);
+        nano_charts_data.totaux.push(r.l + r.e + r.a);
+      }
+      
+      var idx=0;
+      nano_charts_data.ologements = [];
+      nano_charts_data.oactivites = [];
+      nano_charts_data.oequipements = [];
+      nano_charts_data.ototaux = [];
+      nano_charts_data.labels.forEach( function(item) {
+      if( (idx+1) < nano_targets.length  ) {
+        if( nano_targets[idx+1].annee ==  item ) {
+          idx++;
+        }
+      }
+      nano_charts_data.ologements.push(nano_targets[idx].spc_l);
+      nano_charts_data.oequipements.push(nano_targets[idx].spc_e);
+      nano_charts_data.oactivites.push(nano_targets[idx].spc_a);
+      nano_charts_data.ototaux.push(nano_targets[idx].spc_l + nano_targets[idx].spc_e + nano_targets[idx].spc_a);
+      
+      item.ol= nano_targets[idx].spc_l;
+      item.oe= nano_targets[idx].spc_e;
+      item.oa= nano_targets[idx].spc_a;
+    });
+    
+      DisplayCharts();
+    }
+  }
+
+  
+  var getKindColor = function( item ) {
+
+    var cfg = nano_map_config.style.kind[item.replace(/ /g,'')];      // without spaces
+    if( cfg == undefined ) { 
+      cfg = nano_map_config.style.kind[Object.keys(nano_map_config.style.kind)[0]];   // default settings (first property)
+    }
+    
+    return '<div style="display: inline-block;background-color:'+cfg.fill+';opacity:'+cfg.fill_opacity+';width:20px;height:15px;border:2px solid '+cfg.stroke+';"> </div>';
+  }
+  
+
+  // Evaluate per year: surface de plancher
+  var scpParAn = function( year ) {
+    var spc = { a: 0, l: 0, e: 0 };
+return spc;
+    nano_map_areas.forEach( function(item) {
+      var cmp_date = -1;
+      if( item.delivery_date_internal !== null ) {
+        cmp_date = item.delivery_date_internal.getFullYear();
+      }
+      
+      if( item[nano_map_config.json.outside].$t === false && cmp_date > 0 && cmp_date <= year  ) {
+        
+        // surface logement
+        if( item[nano_map_config.json.spc_l].$t != undefined ) {
+          spc.l += item[nano_map_config.json.spc_l].$t;
+        }
+        // surface activité économique
+        if( item[nano_map_config.json.spc_a].$t != undefined ) {
+          spc.a += item[nano_map_config.json.spc_a].$t;
+        }
+        // surface équipement public
+        if( item[nano_map_config.json.spc_e].$t != undefined ) {
+          spc.e += item[nano_map_config.json.spc_e].$t;
+        }
+      }
+    });
+    
+    return spc;
+  }
+
+  
+    
+  // ##################
+  // ##### CHARTS #####
+  // ##################
+  var DisplayCharts = function() {
+
+    // CHART TOTAL
+    var ctx = document.getElementById("nano_chart_spc_t").getContext('2d');
+    var chart_spc_t = new Chart(ctx, {
+      type: 'line',
+      data: {
+          labels: nano_charts_data.labels,
+          datasets: [{
+            label: 'Réalisés',
+            data: nano_charts_data.totaux,
+            fill: true,
+            backgroundColor: '#92bed2',
+            pointBackgroundColor: '#3282bf',
+            borderColor: '#3282bf',
+            pointHighlightStroke: '#3282bf',
+            borderCapStyle: 'butt'
+          },
+          {
+            label: 'Objectifs',
+            data: nano_charts_data.ototaux,
+            backgroundColor: '#e0eadf',
+            pointBackgroundColor: '#6fccdd',
+            borderColor: '#6fccdd',
+            pointHighlightStroke: '#6fccdd',
+            borderCapStyle: 'butt'
+          }],
+      }
+    });
+
+    // CHART LOGEMENTS
+    var ctx = document.getElementById("nano_chart_spc_l").getContext('2d');
+    var chart_spc_l = new Chart(ctx, {
+      type: 'line',
+      data: {
+          labels: nano_charts_data.labels,
+          datasets: [{
+            label: 'Réalisés',
+            data: nano_charts_data.logements,
+            fill: true,
+            backgroundColor: '#92bed2',
+            pointBackgroundColor: '#3282bf',
+            borderColor: '#3282bf',
+            pointHighlightStroke: '#3282bf',
+            borderCapStyle: 'butt'
+          },
+          {
+            label: 'Objectifs',
+            data: nano_charts_data.ologements,
+            backgroundColor: '#e0eadf',
+            pointBackgroundColor: '#6fccdd',
+            borderColor: '#6fccdd',
+            pointHighlightStroke: '#6fccdd',
+            borderCapStyle: 'butt'
+          }],
+      }
+    });
+
+    // CHART EQUIPEMENT
+    var ctx = document.getElementById("nano_chart_spc_e").getContext('2d');
+    var chart_spc_e = new Chart(ctx, {
+      type: 'line',
+      data: {
+          labels: nano_charts_data.labels,
+          datasets: [{
+            label: 'Réalisés',
+            data: nano_charts_data.equipements,
+            fill: true,
+            backgroundColor: '#92bed2',
+            pointBackgroundColor: '#3282bf',
+            borderColor: '#3282bf',
+            pointHighlightStroke: '#3282bf',
+            borderCapStyle: 'butt'
+          },
+          {
+            label: 'Objectifs',
+            data: nano_charts_data.oequipements,
+            backgroundColor: '#e0eadf',
+            pointBackgroundColor: '#6fccdd',
+            borderColor: '#6fccdd',
+            pointHighlightStroke: '#6fccdd',
+            borderCapStyle: 'butt'
+          }],
+      }
+    });
+
+    // CHART ACTIVIT2
+    var ctx = document.getElementById("nano_chart_spc_a").getContext('2d');
+    var chart_spc_a = new Chart(ctx, {
+      type: 'line',
+      data: {
+          labels: nano_charts_data.labels,
+          datasets: [{
+            label: 'Réalisés',
+            data: nano_charts_data.activites,
+            fill: true,
+            backgroundColor: '#92bed2',
+            pointBackgroundColor: '#3282bf',
+            borderColor: '#3282bf',
+            pointHighlightStroke: '#3282bf',
+            borderCapStyle: 'butt'
+          },
+          {
+            label: 'Objectifs',
+            data: nano_charts_data.oactivites,
+            backgroundColor: '#e0eadf',
+            pointBackgroundColor: '#6fccdd',
+            borderColor: '#6fccdd',
+            pointHighlightStroke: '#6fccdd',
+            borderCapStyle: 'butt'
+          }],
+      }
+    });
+  }
+
+
+
+
+  
+  // LAYER : retrieve and display the geo layer (geojson format)
+  var GetAndDisplayLayer = function( item ) {
+  
+    if( item[nano_map_config.json.geodata].$t != '' ) {
+      // geo layer is stored in the JSON table
+      var newLayer = L.geoJson( JSON.parse( dataField(item, 'geodata') ), {
+        style: function(feature) {
+          
+          var cfg = nano_map_config.style.kind[ dataField(item, 'kind').replace(/ /g,'') ];
+          if( cfg == undefined ) { 
+            cfg = nano_map_config.style.kind[Object.keys(nano_map_config.style.kind)[0]];   // default settings (first property)
+          }
+          return {
+            // fillColor: nano_map_config.style.kind[item[nano_map_config.json.kind].$t].fill,
+            fillColor: cfg.fill,
+            fillOpacity: cfg.fill_opacity,
+            color: cfg.stroke,
+            weight: cfg.stroke_width,
+            opacity: cfg.stroke_opacity
+            };
+          }
+      }).addTo(nano_map);      
+      newLayer.on('click', onLayerClick);
+      newLayer.options.custom_item = item;
+      return;
+    }
+
+    // geo layer needs to be downloaded
+return; // do not try to load files
+    var request = new XMLHttpRequest();
+    request.open('GET', nano_map_config.baseURL + item[nano_map_config.json.id].$t + '.geojson', true);
+    request.setRequestHeader('Content-Type', 'application/json');
+    request.onload = function(data) {
+      if( request.status == 404 ) { return; };
+      var newLayer = L.geoJson(JSON.parse(data.target.response), {
+        style: function(feature) {
+          var cfg = nano_map_config.style.kind[item[nano_map_config.json.kind].$t];
+          if( cfg == undefined ) { 
+            cfg = nano_map_config.style.kind[Object.keys(nano_map_config.style.kind)[0]];   // default settings (first property)
+          }
+          return {
+            fillColor: cfg.fill,
+            fillOpacity: cfg.fill_opacity,
+            color: cfg.stroke,
+            weight: cfg.stroke_width,
+            opacity: cfg.stroke_opacity
+            };
+          }
+      }).addTo(nano_map);      
+      //newLayer.bindPopup( "<b>" + item.name.replace(/_/gi, ' ') + "</b><br><b>Date livraison:</b> "+ item.delivery_date +"<br><br>" + item.desc,  );
+      newLayer.on('click', onLayerClick);
+      newLayer.options.custom_item = item;
+    };
+    request.send();
+  };
+  
+
+  
+  
+  
+  var getValueOrEmpty = function( prop, add ) {
+    if( prop == undefined ) {
+      return '-';
+    }
+    return prop + add;
+  }
+
+  
+  
+  // ################################
+  // ##### POPUP PROJET DETAILS #####
+  // ################################
+
+  // Close popup
+  var el = document.getElementById("btnPopupClose");
+  el.addEventListener("click", function(){
+    var box = document.getElementById('myPopup');
+    box.classList.toggle('is-active');
+    if( jQuery().nanogallery2 ) { 
+      jQuery("#popupGallery").nanogallery2('destroy');
+    }
+  }, false);
+	
+	// click outside the modal to close it
+  var el = document.querySelector(".modal-background");
+  el.addEventListener("click", function(){
+    var box = document.getElementById('myPopup');
+    box.classList.toggle('is-active');
+    if( jQuery().nanogallery2 ) { 
+      jQuery("#popupGallery").nanogallery2('destroy');
+    }
+  }, false);
+	
+	
+	
+  
+  // Display the popup
+  var onLayerClick = function(event){
+    //var label = event.target.options.label;
+    var item = event.target.options.custom_item;
+		nano_popup_project( item );
+  };
+
+  var nano_popup_project = function( item ) {
+
+    var box = document.getElementById('myPopup');
+    box.classList.toggle('is-active');
+    
+		// build map
+		if ( popup_nano_map ){
+			// clear existing map
+        popup_nano_map.eachLayer(function(layer){
+					if( layer._url === undefined ) {
+						layer.remove();
+					}
+            //layer.remove();
+        });
+        // this.leafletMap.remove();
+        // this.leafletMap = null;
+    }
+		else {
+			// build map
+			popup_nano_map = L.map('popup_nano_map_id').setView([48.814564, 2.398497], 16);
+			// create the tile layer with correct attribution
+			var osmUrl='http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+			var osmAttrib='Map data © <a href="http://openstreetmap.org">OpenStreetMap</a> contributors | Layers © Christophe Brisbois';
+			var osm = new L.TileLayer(osmUrl, {attribution: osmAttrib});
+
+			popup_nano_map.addLayer(osm);
+		}
+
+		// add layer
+    if( dataField( item, 'geodata') != '' ) {
+      // geo layer is stored in the JSON table
+      var newLayer = L.geoJson( JSON.parse( dataField(item, 'geodata') ), {
+        style: function(feature) {
+          
+          var cfg = nano_map_config.style.kind[ dataField(item, 'kind').replace(/ /g,'') ];
+          if( cfg == undefined ) { 
+            cfg = nano_map_config.style.kind[Object.keys(nano_map_config.style.kind)[0]];   // default settings (first property)
+          }
+          return {
+            // fillColor: nano_map_config.style.kind[item[nano_map_config.json.kind].$t].fill,
+            fillColor: cfg.fill,
+            fillOpacity: cfg.fill_opacity,
+            color: cfg.stroke,
+            weight: cfg.stroke_width,
+            opacity: cfg.stroke_opacity
+            };
+          }
+      }).addTo(popup_nano_map); 
+			popup_nano_map.fitBounds(newLayer.getBounds());			
+      //newLayer.on('click', onLayerClick);
+      //newLayer.options.custom_item = item;
+    }
+		
+		
+    // Add data to popup
+    document.getElementById('popupTitle').innerHTML = item[nano_map_config.json.name].$t.replace(/_/gi, ' ');
+    document.getElementById('popupDeliveryDate').innerHTML = dataField( item, 'annee_livraison');
+    document.getElementById('popupArchitecte').innerHTML = dataField( item, 'architecte');
+    document.getElementById('popupPromoteur').innerHTML = dataField( item, 'promoteur');
+    document.getElementById('popupIlot').innerHTML = dataField( item, 'ilot');
+		
+    // add thumbnail
+		document.getElementById('popupThumbnail').src = nano_map_config.empty_gif;
+    var thmb = dataField( item, 'idimagette')
+    if( thmb != '' ) {
+      document.getElementById('popupThumbnail').src = nano_map_config.thumbnails + '/' + thmb;
+    }
+    
+    
+		var spc = nano_project_spc( item );
+//    document.getElementById('popupSurfL').innerHTML = numberWithCommas( getValueOrEmpty(item[nano_map_config.json.spc_l].$t, 'm2') );
+    document.getElementById('popupSurfL').innerHTML = numberWithCommas( spc.l + 'm2' );
+    document.getElementById('popupSurfA').innerHTML = numberWithCommas( spc.a + 'm2' );
+    document.getElementById('popupSurfE').innerHTML = numberWithCommas( spc.e + 'm2' );
+    
+    var os = '';
+    //console.dir(item[nano_map_config.json.desc]);
+    if( item[nano_map_config.json.outside].$t == true ) {
+      os = '<span class="icon has-text-warning"><i class="fas fa-exclamation-triangle"></i></span>hors ZAC Ivry Confluences';
+    }
+    else {
+    }
+    document.getElementById('popupHorsZAC').innerHTML = os;
+    
+    document.getElementById('popupDesc').innerHTML = urlify(item[nano_map_config.json.desc].$t);
+
+    
+    // Add the list of documents
+    if( item[nano_map_config.json.id].$t != '' ) {
+      // downloadDocumentFolder( item[nano_map_config.json.id].$t, 'popupDocs', false);
+    }
+    
+		// Add the image gallery
+		if( false === true ) {
+    if( item[nano_map_config.json.gallery].$t !== undefined && item[nano_map_config.json.gallery].$t === true ) {
+      // build gallery
+      if( jQuery().nanogallery2 ) { 
+        jQuery("#popupGallery").nanogallery2({
+          kind: 'nano_photos_provider2',
+          dataProvider: nano_map_config.nano_photos_provider,
+          album: item[nano_map_config.json.id].$t,
+          galleryDisplayTransition: '',
+         
+          thumbnailAlignment: 'fillWidth',
+
+          thumbnailHeight: '150', thumbnailWidth: '150',
+          
+          thumbnailDisplayTransitionDuration: 600,
+          thumbnailDisplayInterval: 0,
+          galleryMaxRows: 1,
+          galleryDisplayMode: 'pagination',
+
+          thumbnailGutterWidth: 1,
+          thumbnailGutterHeight: 1,
+          thumbnailBorderHorizontal: 2,
+          thumbnailBorderVertical: 2,
+
+          thumbnailHoverEffect2: null,
+          thumbnailToolbarImage : null,
+          thumbnailToolbarAlbum: null,
+
+          thumbnailLabel: { display: false},
+          
+          viewerToolbar: { display: false },
+          locationHash: false
+        });
+      }
+    }
+    }
+		
+		// Add GDrive folder
+    if( dataField( item, 'idgdrive') != '' ) {
+			document.getElementById('popupGdrive').innerHTML = '<iframe src="https://drive.google.com/embeddedfolderview?id='+ dataField( item, 'idgdrive') +'#grid" style="width:100%; height:300px; border:1px solid black;"></iframe>'
+    }
+		else {
+			document.getElementById('popupGdrive').innerHTML = '';
+		}
+ 
+  };
+
+  // STRING: find URL and insert links
+  function urlify( text) {
+    var urlRegex = /(https?:\/\/[^\s]+)/g;
+    return text.replace(urlRegex, function(url) {
+        return '<a href="' + url + '" target="_blank">' + url + '</a>';
+    })
+    // or alternatively
+    // return text.replace(urlRegex, '<a href="$1">$1</a>')
+  }
+  
+
+
+  // #############################
+  // ##### DOCUMENTS BROWSER #####
+  // #############################
+
+  // load list of documents
+  var downloadDocumentFolder = function( path_2_folder, container, display_folder_up ) {
+    // document.getElementById('popupDocs').innerHTML = '';
+    document.getElementById(container).innerHTML = '';
+    var request = new XMLHttpRequest();
+    if( path_2_folder == '' ) {
+      path_2_folder = '.';
+    }
+    request.open('GET', nano_map_config.docs_provider + 'get_folder_json.php?project=' + path_2_folder, true);
+    request.setRequestHeader('Content-Type', 'application/json');
+    request.onload = function(data) {
+      if( data.target.response.length > 0 ) {
+        var docs = JSON.parse(data.target.response);
+        var d = '';
+        if( display_folder_up ) {
+          d += '<div class="is_a_folder_up" data-folder_name=".">' + path_2_folder.replace(/_/gi, ' ') + '</div>';
+        }
+        docs.files.forEach(function (doc) {
+          // d += '<li><a href="'+ nano_map_config.docs_provider + item[nano_map_config.json.id].$t + '/' + doc.file+'" target="_blank">'+doc.file+'</a></li>';
+          if( doc.is_dir === true ) {
+            d += '<div class="is_a_folder" data-folder_name="' + path_2_folder + '/' + doc.file + '">' + doc.file.replace(/_/gi, ' ') + '</div>';
+          }
+          else {
+            d += '<a class="is_a_file" href="' + nano_map_config.docs_provider + path_2_folder + '/' + doc.file + '" target="_blank">' + doc.file.replace(/_/gi, ' ') + '</a><br>';
+          } 
+        });
+        document.getElementById(container).innerHTML = '<div class="content" style="padding:10px;">' + d + '<br></div>';
+      }
+
+    };
+    request.send();
+  }
+
+  // GLOBAL CLICK EVENT
+  // event delegation to catch click on a folder name in one of the document browsers
+  document.addEventListener('click',function(e){
+    if( e.target && e.target.className == 'is_a_folder'){
+      downloadDocumentFolder( e.target.dataset.folder_name, 'nano_list_documents', true );
+    }
+    if( e.target && e.target.className == 'is_a_folder_up'){
+      downloadDocumentFolder( e.target.dataset.folder_name, 'nano_list_documents', false );
+    }
+  })
+
+  // Populate document browser if it exists
+  if( document.getElementById('nano_list_documents') !== null ) {
+    downloadDocumentFolder( '', 'nano_list_documents', false);
+  }
+
+
+
+
+  // ##########################
+  // ##### MISC FUNCTIONS #####
+  // ##########################
+
+  const numberWithCommas = (x) => {
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  }
+  
+  var propertyToFloat = function( v ) {
+    if( v != '' ) {
+      return parseFloat( v.replace(/ /g,'') );		// remove spaces
+    }
+    else {
+      return 0;
+    }
+  }
+
+  var propertyToBoolean = function( v ) {
+    if( v.toUpperCase() == 'TRUE' ) {
+      return true;
+    }
+    else {
+      return false;
+    }
+  }
+    
+</script>    
+            
+  </body>
+</html>
