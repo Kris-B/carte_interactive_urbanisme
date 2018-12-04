@@ -3,6 +3,8 @@ Ce projet permet de créer une carte interactive à partir de données issues d'
 Format des polygones : GEOJSON  
 Fond de carte : Open Street Map  
 
+Exemple d'implémentation : https://urbanicc.fr/index.php/carte-interactive/
+
 
 ### Ce projet est sous licence GPLv3
 Ce qui signifie que tout projet utilisant tout ou partie de ce projet passe automatiquement en licence GPLv3.
