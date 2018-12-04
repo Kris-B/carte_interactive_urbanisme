@@ -2,6 +2,8 @@
 Ce projet permet de créer une carte interactive à partir de données issues d'un fichier JSON.  
 Format des polygones : GEOJSON  
 Fond de carte : Open Street Map  
+CSS framework : Bulma CSS  
+Gestion carte : Leaflet  
 
 Exemple d'implémentation : https://urbanicc.fr/index.php/carte-interactive/
 
